@@ -99,14 +99,6 @@ export default function SendScreen() {
           ))}
         </View>
 
-        {PARTNER_PHONE === "INSERT_NUMBER_HERE" && (
-          <View style={styles.hintCard}>
-            <Ionicons name="information-circle-outline" size={18} color={COLORS.textSecondary} />
-            <Text style={styles.hintText}>
-              Postavi broj telefona u kodu (PARTNER_PHONE)
-            </Text>
-          </View>
-        )}
       </View>
     </LinearGradient>
   );
@@ -148,22 +140,5 @@ const styles = StyleSheet.create({
     fontFamily: "Quicksand_700Bold",
     fontSize: 17,
     color: COLORS.white,
-  },
-  hintCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: COLORS.white,
-    borderRadius: BORDER_RADIUS.md,
-    padding: 12,
-    marginTop: 24,
-    borderWidth: 1,
-    borderColor: COLORS.pinkPale,
-  },
-  hintText: {
-    fontFamily: "Quicksand_400Regular",
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    flex: 1,
   },
 });

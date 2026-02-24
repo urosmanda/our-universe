@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,15 +9,11 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
   FadeInDown,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { COLORS, FONTS, GRADIENTS, SHADOWS, BORDER_RADIUS, SPACING } from "@/constants/theme";
+import { COLORS, GRADIENTS, SHADOWS, BORDER_RADIUS } from "@/constants/theme";
 import { DATE_IDEAS } from "@/constants/messages";
 
 type DateCategory = "indoor" | "outdoor";
@@ -28,7 +24,12 @@ export default function DateGeneratorScreen() {
   const [currentIdea, setCurrentIdea] = useState<string | null>(null);
   const [ideaKey, setIdeaKey] = useState(0);
 
-  const btnScale = useSharedValue(1);
+  const handleCategoryChange = (newCat: DateCategory) => {
+    if (newCat !== category) {
+      setCategory(newCat);
+      setCurrentIdea(null);
+    }
+  };
 
   const handleGenerate = () => {
     if (Platform.OS !== "web") {
@@ -51,7 +52,7 @@ export default function DateGeneratorScreen() {
         <View style={styles.segmentContainer}>
           <Pressable
             style={[styles.segment, category === "indoor" && styles.segmentActive]}
-            onPress={() => setCategory("indoor")}
+            onPress={() => handleCategoryChange("indoor")}
           >
             <Ionicons name="home-outline" size={18} color={category === "indoor" ? COLORS.white : COLORS.pink} />
             <Text style={[styles.segmentText, category === "indoor" && styles.segmentTextActive]}>
@@ -60,7 +61,7 @@ export default function DateGeneratorScreen() {
           </Pressable>
           <Pressable
             style={[styles.segment, category === "outdoor" && styles.segmentActive]}
-            onPress={() => setCategory("outdoor")}
+            onPress={() => handleCategoryChange("outdoor")}
           >
             <MaterialCommunityIcons name="tree-outline" size={18} color={category === "outdoor" ? COLORS.white : COLORS.pink} />
             <Text style={[styles.segmentText, category === "outdoor" && styles.segmentTextActive]}>
@@ -103,7 +104,7 @@ export default function DateGeneratorScreen() {
             end={{ x: 1, y: 1 }}
           >
             <Ionicons name="sparkles" size={22} color={COLORS.white} />
-            <Text style={styles.generateBtnText}>Izgeneriši ideju</Text>
+            <Text style={styles.generateBtnText}>{`Generi\u0161i ideju`}</Text>
           </LinearGradient>
         </Pressable>
       </View>

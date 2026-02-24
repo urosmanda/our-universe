@@ -188,4 +188,4 @@ export const SMS_BUTTONS = [
   { text: "Mozes da me pozoves?", message: "Hej, ljubavi! Mozes li da me pozoves kad stignes?" }
 ];
 
-export const PARTNER_PHONE = "INSERT_NUMBER_HERE";
+export const PARTNER_PHONE = "+381616862016";

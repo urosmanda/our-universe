@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
+  PanResponder,
+  GestureResponderEvent,
+  LayoutChangeEvent,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,97 +21,162 @@ import Animated, {
   withRepeat,
   withTiming,
   withSequence,
+  withDelay,
   Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import Svg, { Rect, Ellipse, Circle, Path, G, Line } from "react-native-svg";
+import Svg, { Rect, Ellipse, Circle, Path, G, Line, Defs, LinearGradient as SvgGrad, Stop } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, FONTS, GRADIENTS, SHADOWS, BORDER_RADIUS, SPACING } from "@/constants/theme";
+import { COLORS, GRADIENTS, SHADOWS, BORDER_RADIUS } from "@/constants/theme";
 import { MOOD_OPTIONS, SLEEP_MESSAGES } from "@/constants/messages";
 
-const { width } = Dimensions.get("window");
+const { width: SCREEN_W } = Dimensions.get("window");
 
 interface MoodSelection {
   id: string;
   intensity: number;
 }
 
-function SleepIllustration() {
+function SleepScene() {
   return (
-    <Svg width={200} height={140} viewBox="0 0 200 140">
-      <Rect x="20" y="60" width="160" height="70" rx="8" fill="#E8D5F5" />
-      <Rect x="15" y="55" width="170" height="12" rx="4" fill="#C9A0DC" />
-      <Rect x="40" y="70" width="50" height="30" rx="4" fill="#FFFFFF" opacity={0.6} />
-      <Circle cx="100" cy="55" r="18" fill="#FFE0C8" />
-      <Path d="M88 48 Q92 42 96 48" stroke="#5C3D10" strokeWidth="1.5" fill="none" />
-      <Circle cx="93" cy="50" r="1.5" fill="#5C3D10" />
-      <Rect x="104" y="46" width="8" height="5" rx="2.5" fill="#4A90D9" opacity={0.4} stroke="#4A90D9" strokeWidth="0.5" />
-      <Rect x="86" y="46" width="8" height="5" rx="2.5" fill="#4A90D9" opacity={0.4} stroke="#4A90D9" strokeWidth="0.5" />
-      <Path d="M95 55 Q100 58 105 55" stroke="#E91E7A" strokeWidth="1" fill="none" />
-      <Path d="M82 40 Q85 30 100 35 Q108 25 118 35" stroke="#5C3D10" strokeWidth="2" fill="#5C3D10" />
-      <Rect x="30" y="80" width="140" height="50" rx="4" fill="#FFD6E8" opacity={0.7} />
-    </Svg>
+    <View style={sleepSceneStyles.container}>
+      <SheepJumping />
+      <Svg width={260} height={160} viewBox="0 0 260 160">
+        <Defs>
+          <SvgGrad id="blanket" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor="#FFB6D9" />
+            <Stop offset="1" stopColor="#E8A0CC" />
+          </SvgGrad>
+          <SvgGrad id="pillow" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#FFFFFF" />
+            <Stop offset="1" stopColor="#F5E8F0" />
+          </SvgGrad>
+          <SvgGrad id="bedFrame" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#D4B896" />
+            <Stop offset="1" stopColor="#B8956A" />
+          </SvgGrad>
+          <SvgGrad id="headboard" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#C8A882" />
+            <Stop offset="1" stopColor="#A8885E" />
+          </SvgGrad>
+        </Defs>
+
+        <Rect x="18" y="54" width="224" height="14" rx="3" fill="url(#headboard)" />
+
+        <Rect x="10" y="66" width="240" height="80" rx="6" fill="url(#bedFrame)" />
+        <Rect x="14" y="70" width="232" height="72" rx="4" fill="#F5EDE5" />
+
+        <Ellipse cx="70" cy="80" rx="38" ry="16" fill="url(#pillow)" />
+        <Path d="M34 80 Q70 72 106 80" stroke="#E8D8E0" strokeWidth="0.5" fill="none" />
+
+        <Rect x="14" y="86" width="232" height="56" rx="4" fill="url(#blanket)" opacity={0.9} />
+        <Path d="M14 100 Q70 94 130 100 Q190 106 246 100" stroke="rgba(255,255,255,0.3)" strokeWidth="1" fill="none" />
+        <Path d="M14 115 Q80 110 150 116 Q200 120 246 114" stroke="rgba(255,255,255,0.2)" strokeWidth="0.8" fill="none" />
+
+        <Circle cx="70" cy="72" r="16" fill="#FFE0C8" />
+        <Path d="M54 62 Q58 50 70 54 Q76 48 84 54 Q88 50 86 62" fill="#5C3D10" />
+        <Path d="M56 64 Q54 58 60 56" stroke="#5C3D10" strokeWidth="1.5" fill="none" />
+        <Path d="M84 64 Q86 58 80 56" stroke="#5C3D10" strokeWidth="1.5" fill="none" />
+
+        <Rect x="60" y="68" width="10" height="6" rx="3" fill="rgba(74,144,217,0.15)" stroke="#4A6E8C" strokeWidth="0.8" />
+        <Line x1="57" y1="71" x2="60" y2="71" stroke="#4A6E8C" strokeWidth="0.7" />
+        <Rect x="72" y="68" width="10" height="6" rx="3" fill="rgba(74,144,217,0.15)" stroke="#4A6E8C" strokeWidth="0.8" />
+        <Line x1="82" y1="71" x2="85" y2="71" stroke="#4A6E8C" strokeWidth="0.7" />
+        <Line x1="70" y1="71" x2="72" y2="71" stroke="#4A6E8C" strokeWidth="0.6" />
+
+        <Circle cx="63" cy="70" r="1" fill="#2D1B33" />
+        <Circle cx="75" cy="70" r="1" fill="#2D1B33" />
+
+        <Path d="M66 76 Q70 79 74 76" stroke="#E07090" strokeWidth="1" fill="none" />
+
+        <Circle cx="82" cy="76" r="3" fill="#FFB0B0" opacity={0.4} />
+        <Circle cx="58" cy="76" r="3" fill="#FFB0B0" opacity={0.4} />
+
+        <Path d="M170 100 Q180 96 190 100 Q195 98 200 100" stroke="#FFE0C8" strokeWidth="2" fill="none" strokeLinecap="round" />
+
+        <Rect x="8" y="140" width="8" height="14" rx="2" fill="url(#bedFrame)" />
+        <Rect x="244" y="140" width="8" height="14" rx="2" fill="url(#bedFrame)" />
+      </Svg>
+    </View>
   );
 }
 
-function SheepAnimation() {
+function SheepJumping() {
   const jumpAnim = useSharedValue(0);
+  const jumpX = useSharedValue(0);
 
   useEffect(() => {
     jumpAnim.value = withRepeat(
       withSequence(
-        withTiming(-20, { duration: 400, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: 400, easing: Easing.in(Easing.quad) })
+        withTiming(-28, { duration: 500, easing: Easing.out(Easing.cubic) }),
+        withTiming(0, { duration: 500, easing: Easing.in(Easing.cubic) })
       ),
       -1,
       false
     );
+    jumpX.value = withRepeat(
+      withSequence(
+        withTiming(20, { duration: 500, easing: Easing.inOut(Easing.quad) }),
+        withTiming(-20, { duration: 500, easing: Easing.inOut(Easing.quad) })
+      ),
+      -1,
+      true
+    );
   }, []);
 
   const sheepStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: jumpAnim.value }],
+    transform: [{ translateY: jumpAnim.value }, { translateX: jumpX.value }],
   }));
 
   return (
-    <View style={sheepStyles.container}>
-      <View style={sheepStyles.fenceContainer}>
-        <Svg width={60} height={40} viewBox="0 0 60 40">
-          <Line x1="10" y1="0" x2="10" y2="40" stroke="#C4A882" strokeWidth="3" />
-          <Line x1="50" y1="0" x2="50" y2="40" stroke="#C4A882" strokeWidth="3" />
-          <Line x1="5" y1="10" x2="55" y2="10" stroke="#C4A882" strokeWidth="2.5" />
-          <Line x1="5" y1="25" x2="55" y2="25" stroke="#C4A882" strokeWidth="2.5" />
-        </Svg>
-      </View>
-      <Animated.View style={[sheepStyles.sheep, sheepStyle]}>
-        <Svg width={50} height={40} viewBox="0 0 50 40">
-          <Ellipse cx="25" cy="20" rx="18" ry="14" fill="#F5F5F5" />
-          <Circle cx="25" cy="12" r="4" fill="#F5F5F5" />
-          <Circle cx="23" cy="16" r="3" fill="#F5F5F5" />
-          <Circle cx="27" cy="16" r="3" fill="#F5F5F5" />
-          <Circle cx="38" cy="15" r="7" fill="#F5F5F5" />
-          <Circle cx="39" cy="13" r="2" fill="#2D1B33" />
-          <Line x1="18" y1="32" x2="18" y2="40" stroke="#2D1B33" strokeWidth="2" />
-          <Line x1="32" y1="32" x2="32" y2="40" stroke="#2D1B33" strokeWidth="2" />
+    <View style={sleepSceneStyles.sheepArea}>
+      <Svg width={50} height={40} viewBox="0 0 50 40" style={sleepSceneStyles.fence}>
+        <Line x1="8" y1="2" x2="8" y2="38" stroke="#C4A882" strokeWidth="2.5" />
+        <Line x1="42" y1="2" x2="42" y2="38" stroke="#C4A882" strokeWidth="2.5" />
+        <Line x1="4" y1="10" x2="46" y2="10" stroke="#C4A882" strokeWidth="2" />
+        <Line x1="4" y1="24" x2="46" y2="24" stroke="#C4A882" strokeWidth="2" />
+      </Svg>
+      <Animated.View style={[sleepSceneStyles.sheepSvg, sheepStyle]}>
+        <Svg width={44} height={36} viewBox="0 0 44 36">
+          <Ellipse cx="22" cy="18" rx="16" ry="12" fill="#F8F8F8" />
+          <Circle cx="22" cy="10" r="4" fill="#F8F8F8" />
+          <Circle cx="20" cy="14" r="3.5" fill="#FAFAFA" />
+          <Circle cx="24" cy="14" r="3.5" fill="#FAFAFA" />
+          <Circle cx="18" cy="17" r="3" fill="#F5F5F5" />
+          <Circle cx="26" cy="17" r="3" fill="#F5F5F5" />
+          <Circle cx="35" cy="14" r="6" fill="#F5F5F5" />
+          <Circle cx="36" cy="12" r="1.5" fill="#2D1B33" />
+          <Path d="M37 16 Q38 17 39 16" stroke="#2D1B33" strokeWidth="0.6" fill="none" />
+          <Ellipse cx="35" cy="16" r="2" ry="1.5" fill="#FFCCCC" opacity={0.4} />
+          <Line x1="14" y1="28" x2="14" y2="35" stroke="#2D1B33" strokeWidth="1.8" strokeLinecap="round" />
+          <Line x1="20" y1="29" x2="20" y2="35" stroke="#2D1B33" strokeWidth="1.8" strokeLinecap="round" />
+          <Line x1="26" y1="29" x2="26" y2="35" stroke="#2D1B33" strokeWidth="1.8" strokeLinecap="round" />
+          <Line x1="30" y1="28" x2="30" y2="35" stroke="#2D1B33" strokeWidth="1.8" strokeLinecap="round" />
         </Svg>
       </Animated.View>
     </View>
   );
 }
 
-const sheepStyles = StyleSheet.create({
+const sleepSceneStyles = StyleSheet.create({
   container: {
-    height: 70,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sheepArea: {
+    height: 60,
     width: 120,
     alignItems: "center",
     justifyContent: "flex-end",
+    marginBottom: 4,
   },
-  fenceContainer: {
+  fence: {
     position: "absolute",
     bottom: 0,
   },
-  sheep: {
+  sheepSvg: {
     position: "absolute",
-    bottom: 15,
+    bottom: 12,
   },
 });
 
@@ -153,6 +221,168 @@ const chipStyles = StyleSheet.create({
   },
 });
 
+function hexToRgb(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return [r, g, b];
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  return "#" + [r, g, b].map((c) => Math.round(c).toString(16).padStart(2, "0")).join("");
+}
+
+function buildSmoothGradient(moods: MoodSelection[]): string[] {
+  if (moods.length === 0) return [COLORS.pinkPale, COLORS.lavenderLight];
+
+  const totalWeight = moods.reduce((s, m) => s + m.intensity, 0);
+  const weighted: { color: string; weight: number }[] = moods.map((sel) => {
+    const mood = MOOD_OPTIONS.find((m) => m.id === sel.id);
+    return { color: mood?.color || COLORS.pinkPale, weight: sel.intensity / totalWeight };
+  });
+
+  weighted.sort((a, b) => b.weight - a.weight);
+
+  const stops: string[] = [];
+  const numStops = 8;
+
+  for (let i = 0; i < numStops; i++) {
+    const t = i / (numStops - 1);
+    let r = 0, g = 0, b = 0;
+
+    weighted.forEach((w) => {
+      const [cr, cg, cb] = hexToRgb(w.color);
+      const influence = w.weight;
+      const dist = Math.abs(t - (weighted.indexOf(w) / Math.max(weighted.length - 1, 1)));
+      const falloff = Math.exp(-dist * 3) * influence + influence * 0.3;
+      r += cr * falloff;
+      g += cg * falloff;
+      b += cb * falloff;
+    });
+
+    const totalInfluence = weighted.reduce((s, w) => {
+      const dist = Math.abs(t - (weighted.indexOf(w) / Math.max(weighted.length - 1, 1)));
+      return s + Math.exp(-dist * 3) * w.weight + w.weight * 0.3;
+    }, 0);
+
+    r = Math.min(255, r / totalInfluence);
+    g = Math.min(255, g / totalInfluence);
+    b = Math.min(255, b / totalInfluence);
+
+    stops.push(rgbToHex(r, g, b));
+  }
+
+  return stops;
+}
+
+function DraggableSlider({ value, onValueChange }: { value: number; onValueChange: (v: number) => void }) {
+  const trackWidth = useRef(SCREEN_W - 80);
+  const currentValue = useRef(value);
+  currentValue.current = value;
+
+  const panResponder = useMemo(() =>
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        const x = evt.nativeEvent.locationX;
+        const newVal = Math.round(Math.max(0, Math.min(20, (x / trackWidth.current) * 20)));
+        onValueChange(newVal);
+      },
+      onPanResponderMove: (evt) => {
+        const x = evt.nativeEvent.locationX;
+        const newVal = Math.round(Math.max(0, Math.min(20, (x / trackWidth.current) * 20)));
+        if (newVal !== currentValue.current) {
+          onValueChange(newVal);
+        }
+      },
+    }),
+    [onValueChange]
+  );
+
+  const handleLayout = (e: LayoutChangeEvent) => {
+    trackWidth.current = e.nativeEvent.layout.width;
+  };
+
+  const pct = (value / 20) * 100;
+
+  return (
+    <View style={sliderStyles.container}>
+      <Text style={sliderStyles.label}>{value}h</Text>
+      <View
+        style={sliderStyles.track}
+        onLayout={handleLayout}
+        {...panResponder.panHandlers}
+      >
+        <View style={sliderStyles.bg}>
+          <LinearGradient
+            colors={GRADIENTS.romantic as any}
+            style={[sliderStyles.fill, { width: `${pct}%` }]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          />
+        </View>
+        <View style={[sliderStyles.thumb, { left: `${pct}%` }]} />
+      </View>
+      <View style={sliderStyles.labels}>
+        <Text style={sliderStyles.endLabel}>0h</Text>
+        <Text style={sliderStyles.endLabel}>20h</Text>
+      </View>
+    </View>
+  );
+}
+
+const sliderStyles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+    paddingHorizontal: 10,
+  },
+  label: {
+    fontFamily: "Quicksand_700Bold",
+    fontSize: 28,
+    color: COLORS.pink,
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  track: {
+    height: 44,
+    justifyContent: "center",
+    position: "relative",
+  },
+  bg: {
+    height: 8,
+    backgroundColor: COLORS.pinkPale,
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  fill: {
+    height: 8,
+    borderRadius: 4,
+  },
+  thumb: {
+    position: "absolute",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.pink,
+    marginLeft: -14,
+    top: 8,
+    borderWidth: 3,
+    borderColor: COLORS.white,
+    ...SHADOWS.medium,
+  },
+  labels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 2,
+  },
+  endLabel: {
+    fontFamily: "Quicksand_400Regular",
+    fontSize: 12,
+    color: COLORS.textLight,
+  },
+});
+
 export default function MoodSleepScreen() {
   const insets = useSafeAreaInsets();
   const [selectedMoods, setSelectedMoods] = useState<MoodSelection[]>([]);
@@ -166,17 +396,7 @@ export default function MoodSleepScreen() {
 
   const bubbleColors = useMemo(() => {
     if (!mixed || selectedMoods.length === 0) return [COLORS.pinkPale, COLORS.lavenderLight];
-    const colors: string[] = [];
-    selectedMoods.forEach((sel) => {
-      const mood = MOOD_OPTIONS.find((m) => m.id === sel.id);
-      if (mood) {
-        for (let i = 0; i < sel.intensity; i++) {
-          colors.push(mood.color);
-        }
-      }
-    });
-    if (colors.length < 2) colors.push(colors[0] || COLORS.pinkPale);
-    return colors;
+    return buildSmoothGradient(selectedMoods);
   }, [mixed, selectedMoods]);
 
   const handleMoodPress = (moodId: string) => {
@@ -202,8 +422,9 @@ export default function MoodSleepScreen() {
     if (selectedMoods.length === 0) return;
     if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     bubbleScale.value = withSequence(
-      withSpring(1.15, { damping: 6 }),
-      withSpring(1, { damping: 8 })
+      withSpring(1.18, { damping: 6 }),
+      withSpring(0.95, { damping: 8 }),
+      withSpring(1, { damping: 10 })
     );
     setMixed(true);
 
@@ -276,39 +497,9 @@ export default function MoodSleepScreen() {
 
         <Text style={styles.sectionTitle}>Sleep Tracker</Text>
 
-        <View style={styles.sleepSection}>
-          <SheepAnimation />
-          <SleepIllustration />
-        </View>
+        <SleepScene />
 
-        <View style={styles.sliderContainer}>
-          <Text style={styles.sliderLabel}>{sleepHours}h</Text>
-          <View style={styles.sliderTrack}>
-            <Pressable
-              style={styles.sliderTouchArea}
-              onPress={(e) => {
-                const x = (e as any).nativeEvent.locationX;
-                const trackWidth = width - 80;
-                const value = Math.round((x / trackWidth) * 20);
-                setSleepHours(Math.max(0, Math.min(20, value)));
-              }}
-            >
-              <View style={styles.sliderBg}>
-                <LinearGradient
-                  colors={GRADIENTS.romantic as any}
-                  style={[styles.sliderFill, { width: `${(sleepHours / 20) * 100}%` }]}
-                />
-              </View>
-              <View
-                style={[styles.sliderThumb, { left: `${(sleepHours / 20) * 100}%` }]}
-              />
-            </Pressable>
-          </View>
-          <View style={styles.sliderLabels}>
-            <Text style={styles.sliderEndLabel}>0h</Text>
-            <Text style={styles.sliderEndLabel}>20h</Text>
-          </View>
-        </View>
+        <DraggableSlider value={sleepHours} onValueChange={setSleepHours} />
 
         <Pressable
           onPress={handleSleepConfirm}
@@ -509,61 +700,6 @@ const styles = StyleSheet.create({
     color: COLORS.lavender,
     textAlign: "center",
     marginBottom: 16,
-  },
-  sleepSection: {
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 20,
-  },
-  sliderContainer: {
-    marginBottom: 16,
-    paddingHorizontal: 10,
-  },
-  sliderLabel: {
-    fontFamily: "Quicksand_700Bold",
-    fontSize: 28,
-    color: COLORS.pink,
-    textAlign: "center",
-    marginBottom: 8,
-  },
-  sliderTrack: {
-    height: 40,
-    justifyContent: "center",
-  },
-  sliderTouchArea: {
-    height: 40,
-    justifyContent: "center",
-    position: "relative",
-  },
-  sliderBg: {
-    height: 6,
-    backgroundColor: COLORS.pinkPale,
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  sliderFill: {
-    height: 6,
-    borderRadius: 3,
-  },
-  sliderThumb: {
-    position: "absolute",
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.pink,
-    marginLeft: -12,
-    top: 8,
-    ...SHADOWS.small,
-  },
-  sliderLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  sliderEndLabel: {
-    fontFamily: "Quicksand_400Regular",
-    fontSize: 12,
-    color: COLORS.textLight,
   },
   sleepBtn: {
     flexDirection: "row",

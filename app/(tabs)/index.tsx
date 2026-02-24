@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,39 +17,80 @@ import Animated, {
   withTiming,
   withSpring,
   withDelay,
-  Easing,
   runOnJS,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import Svg, { Path, Rect, Ellipse, Circle, G } from "react-native-svg";
+import Svg, { Path, Rect, Ellipse, Circle, G, Defs, LinearGradient as SvgGrad, Stop, ClipPath } from "react-native-svg";
 import { COLORS, FONTS, GRADIENTS } from "@/constants/theme";
 import { LOVE_JAR_MESSAGES } from "@/constants/messages";
 
-const { width } = Dimensions.get("window");
+const { width: SCREEN_W } = Dimensions.get("window");
+
+const NOTE_POSITIONS = [
+  { x: 58, y: 68, r: -18 }, { x: 90, y: 62, r: 12 }, { x: 122, y: 70, r: -8 }, { x: 154, y: 64, r: 22 },
+  { x: 52, y: 92, r: 25 }, { x: 82, y: 88, r: -15 }, { x: 114, y: 84, r: 8 }, { x: 146, y: 90, r: -22 }, { x: 168, y: 86, r: 14 },
+  { x: 56, y: 114, r: -10 }, { x: 86, y: 110, r: 20 }, { x: 118, y: 106, r: -5 }, { x: 150, y: 112, r: 15 }, { x: 170, y: 108, r: -18 },
+  { x: 50, y: 138, r: 12 }, { x: 80, y: 134, r: -20 }, { x: 112, y: 130, r: 6 }, { x: 144, y: 136, r: -12 }, { x: 166, y: 132, r: 22 },
+  { x: 54, y: 162, r: -8 }, { x: 84, y: 158, r: 18 }, { x: 116, y: 154, r: -14 }, { x: 148, y: 160, r: 10 }, { x: 168, y: 156, r: -25 },
+  { x: 58, y: 186, r: 15 }, { x: 88, y: 182, r: -10 }, { x: 120, y: 178, r: 20 }, { x: 152, y: 184, r: -6 },
+  { x: 62, y: 206, r: -22 }, { x: 94, y: 202, r: 8 }, { x: 126, y: 198, r: -16 }, { x: 158, y: 204, r: 12 },
+  { x: 68, y: 224, r: 10 }, { x: 100, y: 220, r: -12 }, { x: 132, y: 218, r: 18 }, { x: 156, y: 222, r: -8 },
+];
 
 function JarIllustration() {
   return (
-    <Svg width={220} height={280} viewBox="0 0 220 280">
-      <Rect x="35" y="15" width="150" height="25" rx="4" fill="#E8E8E8" stroke="#D0D0D0" strokeWidth="1.5" />
-      <Rect x="45" y="5" width="130" height="15" rx="7" fill="#F0F0F0" stroke="#D8D8D8" strokeWidth="1" />
-      <Path d="M40 40 L35 70 Q25 140 30 200 Q32 240 55 260 Q70 272 110 272 Q150 272 165 260 Q188 240 190 200 Q195 140 185 70 L180 40 Z" fill="rgba(200,230,255,0.25)" stroke="rgba(180,210,240,0.5)" strokeWidth="1.5" />
-      <Path d="M50 60 Q45 60 43 70 L40 90" stroke="rgba(255,255,255,0.5)" strokeWidth="2" fill="none" strokeLinecap="round" />
-      {Array.from({ length: 18 }).map((_, i) => {
-        const row = Math.floor(i / 3);
-        const col = i % 3;
-        const x = 65 + col * 35 + (row % 2) * 15;
-        const y = 80 + row * 28;
-        const rotation = -20 + Math.random() * 40;
-        return (
-          <G key={i} transform={`translate(${x}, ${y}) rotate(${rotation})`}>
-            <Rect x="-12" y="-6" width="24" height="12" rx="3" fill="#FFF8F0" stroke="#E8D8C8" strokeWidth="0.5" />
-            <Path d={`M-2 -8 Q0 -12 2 -8`} stroke="#E91E7A" strokeWidth="1.2" fill="none" />
-            <Circle cx="-1" cy="-8" r="1.5" fill="#E91E7A" />
-            <Circle cx="1" cy="-8" r="1.5" fill="#E91E7A" />
+    <Svg width={220} height={290} viewBox="0 0 220 290">
+      <Defs>
+        <SvgGrad id="jarGlass" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor="#E8F4FD" stopOpacity="0.4" />
+          <Stop offset="0.5" stopColor="#D4ECF9" stopOpacity="0.2" />
+          <Stop offset="1" stopColor="#C8E6F5" stopOpacity="0.35" />
+        </SvgGrad>
+        <SvgGrad id="lidMetal" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#F5F0E8" />
+          <Stop offset="0.3" stopColor="#E8E0D0" />
+          <Stop offset="0.7" stopColor="#D8CFC0" />
+          <Stop offset="1" stopColor="#C8BFB0" />
+        </SvgGrad>
+        <SvgGrad id="lidTop" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#F0E8D8" />
+          <Stop offset="1" stopColor="#E0D8C8" />
+        </SvgGrad>
+        <ClipPath id="jarClip">
+          <Path d="M42 45 L38 75 Q28 145 32 210 Q34 248 58 268 Q74 280 110 280 Q146 280 162 268 Q186 248 188 210 Q192 145 182 75 L178 45 Z" />
+        </ClipPath>
+      </Defs>
+
+      <Rect x="38" y="18" width="144" height="28" rx="5" fill="url(#lidMetal)" stroke="#C0B8A8" strokeWidth="1" />
+      <Rect x="48" y="8" width="124" height="14" rx="7" fill="url(#lidTop)" stroke="#D0C8B8" strokeWidth="0.8" />
+      <Path d="M50 18 L50 22" stroke="#D8D0C0" strokeWidth="0.5" />
+      <Path d="M70 18 L70 22" stroke="#D8D0C0" strokeWidth="0.5" />
+      <Path d="M90 18 L90 22" stroke="#D8D0C0" strokeWidth="0.5" />
+      <Path d="M110 18 L110 22" stroke="#D8D0C0" strokeWidth="0.5" />
+      <Path d="M130 18 L130 22" stroke="#D8D0C0" strokeWidth="0.5" />
+      <Path d="M150 18 L150 22" stroke="#D8D0C0" strokeWidth="0.5" />
+      <Path d="M170 18 L170 22" stroke="#D8D0C0" strokeWidth="0.5" />
+
+      <Path d="M42 45 L38 75 Q28 145 32 210 Q34 248 58 268 Q74 280 110 280 Q146 280 162 268 Q186 248 188 210 Q192 145 182 75 L178 45 Z" fill="url(#jarGlass)" stroke="rgba(170,200,230,0.6)" strokeWidth="1.5" />
+
+      <G clipPath="url(#jarClip)">
+        {NOTE_POSITIONS.map((pos, i) => (
+          <G key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.r})`}>
+            <Rect x="-14" y="-7" width="28" height="14" rx="4" fill="#FFFAF5" stroke="#E8DDD0" strokeWidth="0.6" />
+            <Path d="M-3 -9 Q-1 -14 1 -9" stroke="#D4364C" strokeWidth="1" fill="none" />
+            <Path d="M1 -9 Q3 -14 5 -9" stroke="#D4364C" strokeWidth="1" fill="none" />
+            <Circle cx="-1" cy="-10" r="1.2" fill="#D4364C" />
+            <Circle cx="3" cy="-10" r="1.2" fill="#D4364C" />
+            <Path d="M-1 -9 L1 -6" stroke="#D4364C" strokeWidth="0.6" />
+            <Path d="M3 -9 L1 -6" stroke="#D4364C" strokeWidth="0.6" />
           </G>
-        );
-      })}
-      <Ellipse cx="110" cy="272" rx="70" ry="6" fill="rgba(200,180,210,0.15)" />
+        ))}
+      </G>
+
+      <Path d="M52 50 Q48 55 46 70 L44 95" stroke="rgba(255,255,255,0.55)" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <Path d="M56 55 Q54 60 53 72 L52 85" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+
+      <Ellipse cx="110" cy="282" rx="65" ry="5" fill="rgba(180,160,190,0.12)" />
     </Svg>
   );
 }
@@ -60,7 +101,7 @@ export default function LoveJarScreen() {
   const [hasOpenedToday, setHasOpenedToday] = useState(false);
 
   const jarRotation = useSharedValue(0);
-  const noteTranslateY = useSharedValue(0);
+  const noteTranslateY = useSharedValue(60);
   const noteScale = useSharedValue(0);
   const noteOpacity = useSharedValue(0);
   const noteRotation = useSharedValue(0);
@@ -76,7 +117,7 @@ export default function LoveJarScreen() {
         setHasOpenedToday(true);
         noteScale.value = 1;
         noteOpacity.value = 1;
-        noteTranslateY.value = -60;
+        noteTranslateY.value = 0;
         subtitleOpacity.value = 1;
       }
     }
@@ -124,13 +165,13 @@ export default function LoveJarScreen() {
     setTimeout(() => {
       runOnJS(showNote)(message);
 
-      noteTranslateY.value = 40;
+      noteTranslateY.value = 60;
       noteScale.value = 0.3;
       noteOpacity.value = 0;
-      noteRotation.value = 15;
+      noteRotation.value = 12;
 
       noteOpacity.value = withTiming(1, { duration: 300 });
-      noteTranslateY.value = withSpring(-60, { damping: 12, stiffness: 80 });
+      noteTranslateY.value = withSpring(0, { damping: 12, stiffness: 80 });
       noteScale.value = withSpring(1, { damping: 10, stiffness: 90 });
       noteRotation.value = withSpring(0, { damping: 10 });
       subtitleOpacity.value = withDelay(600, withTiming(1, { duration: 400 }));
@@ -162,25 +203,28 @@ export default function LoveJarScreen() {
       colors={GRADIENTS.background}
       style={styles.container}
     >
-      <View style={[styles.content, { paddingTop: insets.top + 20 + webTopInset, paddingBottom: insets.bottom + 100 + webBottomInset }]}>
+      <View style={[styles.content, { paddingTop: insets.top + 16 + webTopInset, paddingBottom: insets.bottom + 90 + webBottomInset }]}>
         <Text style={styles.title}>Love Jar</Text>
 
-        {todayMessage && (
-          <Animated.View style={[styles.noteCard, noteAnimStyle]}>
-            <LinearGradient
-              colors={['#FFFFFF', '#FFF7FA']}
-              style={styles.noteGradient}
-            >
-              <Text style={styles.noteText}>{todayMessage}</Text>
-            </LinearGradient>
-          </Animated.View>
-        )}
-
-        {todayMessage && (
-          <Animated.Text style={[styles.subtitle, subtitleAnimStyle]}>
-            Vrati se sutra za novu poruku
-          </Animated.Text>
-        )}
+        <View style={styles.messageArea}>
+          {todayMessage ? (
+            <>
+              <Animated.View style={[styles.noteCard, noteAnimStyle]}>
+                <LinearGradient
+                  colors={['#FFFFFF', '#FFF7FA']}
+                  style={styles.noteGradient}
+                >
+                  <Text style={styles.noteText}>{todayMessage}</Text>
+                </LinearGradient>
+              </Animated.View>
+              <Animated.Text style={[styles.subtitle, subtitleAnimStyle]}>
+                Vrati se sutra za novu poruku
+              </Animated.Text>
+            </>
+          ) : (
+            <View style={styles.messageEmpty} />
+          )}
+        </View>
 
         <Pressable onPress={handleJarTap} style={styles.jarWrapper}>
           <Animated.View style={jarAnimStyle}>
@@ -209,11 +253,21 @@ const styles = StyleSheet.create({
     fontFamily: "DancingScript_700Bold",
     fontSize: 42,
     color: COLORS.pink,
-    marginBottom: 16,
     textAlign: "center",
   },
+  messageArea: {
+    minHeight: 130,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+    paddingHorizontal: 20,
+    marginBottom: 4,
+  },
+  messageEmpty: {
+    height: 100,
+  },
   noteCard: {
-    marginHorizontal: 24,
+    width: "100%",
     borderRadius: 16,
     overflow: "hidden",
     ...Platform.select({
@@ -231,35 +285,34 @@ const styles = StyleSheet.create({
         shadowRadius: 12,
       },
     }),
-    marginBottom: 8,
+    marginBottom: 6,
   },
   noteGradient: {
-    padding: 20,
+    padding: 18,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.pinkPale,
   },
   noteText: {
     fontFamily: "Quicksand_500Medium",
-    fontSize: 16,
+    fontSize: 15,
     color: COLORS.textPrimary,
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 23,
   },
   subtitle: {
     fontFamily: "Quicksand_500Medium",
     fontSize: 13,
     color: COLORS.textSecondary,
-    marginBottom: 12,
     fontStyle: "italic",
   },
   jarWrapper: {
-    marginTop: 8,
+    marginTop: 0,
   },
   hint: {
     fontFamily: "Quicksand_500Medium",
     fontSize: 14,
     color: COLORS.textLight,
-    marginTop: 12,
+    marginTop: 8,
   },
 });
