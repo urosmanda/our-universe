@@ -1,0 +1,158 @@
+You are working inside an existing Expo + expo-router React Native project (there is an app/ folder).
+Build a complete romantic mobile app for a couple named “Our UNiverse”.
+No login, no payments. All data stored locally (AsyncStorage). iOS-first. Light theme only.
+Style: romantic, vibrant pink vibe (NOT pale), premium look, smooth animations, clean spacing.
+Use a handwritten/script font for the main title “Love Jar” and generally romantic typography (use a handwritten Google font via expo-google-fonts; load it properly). Avoid anything that looks like placeholder UI.
+
+GENERAL REQUIREMENTS
+- Use expo-router with bottom tabs navigation.
+- Tabs: Love Jar, Open When, Date Generator, Future, Mood & Sleep, Send To Me.
+- Remove/hide default top-left headers (“Jar” etc). Use custom headers inside screens; headerShown false where appropriate.
+- Add premium micro-interactions: press scale, fade, bounce, spring.
+- Use tasteful gradients and vibrant accents (pink + lavender + coral + gold).
+- Never display counts like “how many messages exist”, “how many remaining”, etc.
+
+FILE STRUCTURE (create these)
+- app/_layout.tsx: Tabs layout, header hidden.
+- app/index.tsx: redirect to /jar
+- app/jar.tsx
+- app/openwhen.tsx
+- app/dates.tsx
+- app/future.tsx
+- app/mood.tsx
+- app/send.tsx
+- components/ (reusable UI: GradientBackground, RomanticButton, Card, Modal, etc.)
+- constants/theme.ts: colors, spacing, typography
+- assets/ only if needed; prefer inline SVG via react-native-svg (already installed).
+
+TAB 1: LOVE JAR (NO EDITING, NO COUNTS)
+Design:
+- Top center: large handwritten/script title “Love Jar” in vibrant pink.
+- Main focus: a beautiful jar illustration centered but slightly lower on screen.
+- Jar looks FULL of small rolled white paper notes tied with tiny red bows, almost to the top. Premium illustration (SVG).
+- Clicking the jar:
+  1) jar shakes left-right (cute obvious shake)
+  2) (optional) lid pops a bit
+  3) a message note/card flies OUT of the jar upward and settles ABOVE the jar (strong fly-out animation).
+- After opening: show the message above jar, and beneath it show: “Vrati se sutra za novu poruku”.
+Logic:
+- Store lastOpenedDate (YYYY-MM-DD) in AsyncStorage.
+- When tapped:
+  - If not opened today: pick random message from a fixed built-in list of 50 romantic/funny messages (in Serbian), save today date and chosen message so it persists.
+  - If already opened today: tiny “nope” shake, keep same message visible, do NOT generate a new one.
+- Do not show any list of messages; user cannot edit/add/remove.
+Animations: shake rotate; note fly-out translateY/scale/rotation with spring settle.
+
+TAB 2: OPEN WHEN (ENVELOPES + OPEN/CLOSE ANIMATION + SPECIAL GOLD ONE)
+Design:
+- A beautiful list/grid of cute envelope cards. Each envelope looks like a real envelope (SVG or well-styled Views), premium.
+- Each envelope shows a label:
+  1) Otvori kada si tužna
+  2) Otvori kada si ljuta
+  3) Otvori kada si smorena
+  4) Otvori kada ti nedostajem
+  5) Otvori kada si umorna
+  6) Otvori kada overthinkuješ
+  7) Otvori kada imaš loš dan
+  8) Otvori kada si pod stresom
+  9) Otvori kada ti treba motivacija
+  10) Otvori kada ne možeš da zaspiš
+  11) Otvori kada si usamljena
+  12) Otvori kada si nervozna
+  13) Otvori kada želiš podsetnik da te volim
+- Each has a prewritten message content in Serbian (romantic + supportive + sometimes funny). Keep content high quality, not generic.
+Envelope behavior:
+- Tap envelope -> envelope flap opens + letter slides out + message appears.
+- Tap again -> letter slides in + envelope closes (reverse animation).
+SPECIAL LAST ENVELOPE:
+- Add a final special envelope at the bottom:
+  “Open when we get married”
+- This envelope must be visually distinct: GOLD envelope style (gold gradient + shine).
+- When user taps this gold envelope:
+  - Instead of opening immediately, show a password modal: “Unesi šifru”.
+  - If password equals EXACT string: “danasjetajdan” (hardcoded in code; user should not see it anywhere in UI), then play open animation and reveal a special romantic message.
+  - If wrong password: show a cute error (shake modal / small haptic if possible) and do not open.
+- The password should not be displayed anywhere. Only stored in code as a constant.
+
+TAB 3: DATE GENERATOR
+Design:
+- Top: segmented control / pill selector with two options: Indoor / Outdoor.
+- Big central button (gradient, romantic) to generate.
+- On press: show a date idea card below (fade + slide).
+Logic:
+- Built-in list of 40+ date ideas tagged indoor/outdoor, in Serbian.
+- Filter based on selected option. No editing.
+
+TAB 4: FUTURE
+Purpose: Plans, Wishlist, Goals. Editable and stored locally.
+Design:
+- Screen with 3 elegant sections (cards with icons):
+  1) Travel Plans:
+     - Add destination + optional date.
+     - If date exists: show countdown (days remaining).
+     - If no date: treat as “Want to visit” bucket item with checkbox.
+  2) Wishlist:
+     - Add items to buy/receive (text + optional priority).
+  3) Goals:
+     - Add goals (text + optional deadline).
+Behavior:
+- All stored in AsyncStorage.
+- Add items via modal/bottom sheet.
+- Premium romantic UI (not a business checklist).
+
+TAB 5: MOOD & SLEEP
+Part A: Mood Mixer
+Design:
+- Center: transparent bubble/orb.
+- Below: horizontal scroll row of mood chips, each with different color.
+- Tap a mood chip -> modal to pick intensity 1–5.
+- User can pick multiple moods.
+- “Mix” button -> bubble animates into a blended gradient based on chosen moods weights (intensity).
+Mix logic:
+- Use expo-linear-gradient to render bubble gradient.
+- Weight colors by intensity (repeat each color intensity times in gradient array) so 5 dominates and 1 barely visible.
+- Add animation on mix (bubble pulses and gradient transitions).
+
+Part B: Sleep Tracker (scroll down)
+Design:
+- Cute illustration: bed with a girl sleeping (brown hair, black glasses) under a blanket.
+- Above her head: a looping animation of sheep jumping over a fence continuously (simple loop, charming).
+- Sleep slider from 0 to 20 hours + confirm button.
+- After confirm: show a Serbian message depending on range:
+  0–3: very little sleep (supportive)
+  4–6: okay but could be better
+  7–9: perfect
+  10–12: slept a lot (funny)
+  13–20: hibernation joke (funny)
+Storage:
+- Save mood selection/intensities + mixed result and sleep hours for today in AsyncStorage.
+
+TAB 6: SEND TO ME (SERBIAN SMS)
+Design:
+- A set of cute rounded buttons with animations (heart burst / bounce / ripple).
+Buttons text in Serbian:
+- “Nedostaješ mi”
+- “Volim te”
+- “Treba mi zagrljaj”
+- “Mislim na tebe”
+- “Možeš da me pozoveš?”
+Behavior:
+- On press, open SMS composer to send a prefilled Serbian message to MY number.
+- IMPORTANT: create a constant placeholder: const PARTNER_PHONE = "INSERT_NUMBER_HERE";
+- Use Linking.openURL with sms: scheme, iOS-friendly format.
+No push notifications.
+
+TECH + UX
+- Use AsyncStorage for persistence, no backend.
+- App must run using `npm run expo:dev` in Replit.
+- Code must be clean and componentized.
+- Do not leave TODOs. Deliver fully working screens.
+- Hide default headers so nothing shows top-left like “Jar”.
+
+FINISHING
+- Ensure cohesive premium romantic theme across tabs.
+- Smooth animations for jar, envelopes, bubble mix, sheep loop.
+- Use safe area padding.
+- Ensure the gold envelope password flow is polished.
+
+Deliver complete code by creating/updating files accordingly.
