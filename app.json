@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "My App",
-    "slug": "my-app",
+    "name": "Our UNiverse",
+    "slug": "our-universe",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FFF0F5"
     },
     "ios": {
       "supportsTablet": false,
