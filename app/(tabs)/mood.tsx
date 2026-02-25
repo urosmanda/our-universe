@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,9 +7,6 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
-  PanResponder,
-  GestureResponderEvent,
-  LayoutChangeEvent,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,12 +18,12 @@ import Animated, {
   withRepeat,
   withTiming,
   withSequence,
-  withDelay,
   Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import Svg, { Rect, Ellipse, Circle, Path, G, Line, Defs, LinearGradient as SvgGrad, Stop } from "react-native-svg";
+import Svg, { Rect, Ellipse, Circle, Path, G, Line, Defs, LinearGradient as SvgGrad, Stop, ClipPath } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
+import Slider from "@react-native-community/slider";
 import { COLORS, GRADIENTS, SHADOWS, BORDER_RADIUS } from "@/constants/theme";
 import { MOOD_OPTIONS, SLEEP_MESSAGES } from "@/constants/messages";
 
@@ -37,123 +34,295 @@ interface MoodSelection {
   intensity: number;
 }
 
-function SleepScene() {
+function GoatSvg() {
   return (
-    <View style={sleepSceneStyles.container}>
-      <SheepJumping />
-      <Svg width={260} height={160} viewBox="0 0 260 160">
-        <Defs>
-          <SvgGrad id="blanket" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#FFB6D9" />
-            <Stop offset="1" stopColor="#E8A0CC" />
-          </SvgGrad>
-          <SvgGrad id="pillow" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#FFFFFF" />
-            <Stop offset="1" stopColor="#F5E8F0" />
-          </SvgGrad>
-          <SvgGrad id="bedFrame" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#D4B896" />
-            <Stop offset="1" stopColor="#B8956A" />
-          </SvgGrad>
-          <SvgGrad id="headboard" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#C8A882" />
-            <Stop offset="1" stopColor="#A8885E" />
-          </SvgGrad>
-        </Defs>
+    <Svg width={56} height={48} viewBox="0 0 56 48">
+      <Defs>
+        <SvgGrad id="goatBody" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#F5F0E8" />
+          <Stop offset="0.4" stopColor="#EDE5D8" />
+          <Stop offset="1" stopColor="#DDD5C5" />
+        </SvgGrad>
+        <SvgGrad id="goatBelly" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#FAF5EE" />
+          <Stop offset="1" stopColor="#F0E8DC" />
+        </SvgGrad>
+      </Defs>
 
-        <Rect x="18" y="54" width="224" height="14" rx="3" fill="url(#headboard)" />
+      <Path d="M12 22 Q8 14 14 10 Q18 8 22 12 L20 18 Z" fill="#E8DDD0" stroke="#D0C5B5" strokeWidth="0.6" />
+      <Path d="M10 24 Q6 16 10 11 Q13 9 16 13 L15 19 Z" fill="#E8DDD0" stroke="#D0C5B5" strokeWidth="0.6" />
 
-        <Rect x="10" y="66" width="240" height="80" rx="6" fill="url(#bedFrame)" />
-        <Rect x="14" y="70" width="232" height="72" rx="4" fill="#F5EDE5" />
+      <Path d="M16 20 Q14 16 18 14 Q24 12 32 12 Q40 12 44 16 Q48 20 46 28 Q44 34 38 36 Q32 38 24 38 Q18 38 16 34 Q14 30 16 24 Z" fill="url(#goatBody)" stroke="#D0C5B5" strokeWidth="0.8" />
 
-        <Ellipse cx="70" cy="80" rx="38" ry="16" fill="url(#pillow)" />
-        <Path d="M34 80 Q70 72 106 80" stroke="#E8D8E0" strokeWidth="0.5" fill="none" />
+      <Path d="M22 26 Q24 30 30 32 Q36 30 38 26 Q36 34 30 36 Q24 34 22 26 Z" fill="url(#goatBelly)" opacity={0.7} />
 
-        <Rect x="14" y="86" width="232" height="56" rx="4" fill="url(#blanket)" opacity={0.9} />
-        <Path d="M14 100 Q70 94 130 100 Q190 106 246 100" stroke="rgba(255,255,255,0.3)" strokeWidth="1" fill="none" />
-        <Path d="M14 115 Q80 110 150 116 Q200 120 246 114" stroke="rgba(255,255,255,0.2)" strokeWidth="0.8" fill="none" />
+      <Path d="M18 22 Q16 20 18 18 Q20 18 20 20 Q20 22 18 22 Z" fill="#F5F0E8" stroke="#D0C5B5" strokeWidth="0.5" />
 
-        <Circle cx="70" cy="72" r="16" fill="#FFE0C8" />
-        <Path d="M54 62 Q58 50 70 54 Q76 48 84 54 Q88 50 86 62" fill="#5C3D10" />
-        <Path d="M56 64 Q54 58 60 56" stroke="#5C3D10" strokeWidth="1.5" fill="none" />
-        <Path d="M84 64 Q86 58 80 56" stroke="#5C3D10" strokeWidth="1.5" fill="none" />
+      <Circle cx="8" cy="22" r="7" fill="url(#goatBody)" stroke="#D0C5B5" strokeWidth="0.8" />
 
-        <Rect x="60" y="68" width="10" height="6" rx="3" fill="rgba(74,144,217,0.15)" stroke="#4A6E8C" strokeWidth="0.8" />
-        <Line x1="57" y1="71" x2="60" y2="71" stroke="#4A6E8C" strokeWidth="0.7" />
-        <Rect x="72" y="68" width="10" height="6" rx="3" fill="rgba(74,144,217,0.15)" stroke="#4A6E8C" strokeWidth="0.8" />
-        <Line x1="82" y1="71" x2="85" y2="71" stroke="#4A6E8C" strokeWidth="0.7" />
-        <Line x1="70" y1="71" x2="72" y2="71" stroke="#4A6E8C" strokeWidth="0.6" />
+      <Path d="M6 18 Q3 12 5 9 L7 10 Q6 13 7 17 Z" fill="#D8CFC0" stroke="#C0B5A5" strokeWidth="0.5" />
+      <Path d="M10 17 Q12 11 11 8 L9 9 Q10 12 9 16 Z" fill="#D8CFC0" stroke="#C0B5A5" strokeWidth="0.5" />
 
-        <Circle cx="63" cy="70" r="1" fill="#2D1B33" />
-        <Circle cx="75" cy="70" r="1" fill="#2D1B33" />
+      <Path d="M4 18 Q2 16 3 14" stroke="#E0D8CC" strokeWidth="0.4" fill="none" />
+      <Path d="M12 17 Q13 15 12 13" stroke="#E0D8CC" strokeWidth="0.4" fill="none" />
 
-        <Path d="M66 76 Q70 79 74 76" stroke="#E07090" strokeWidth="1" fill="none" />
+      <Ellipse cx="6" cy="21" rx="1.8" ry="2" fill="#2D1B33" />
+      <Circle cx="5.5" cy="20.5" r="0.5" fill="#FFFFFF" />
+      <Ellipse cx="11" cy="21" rx="1.5" ry="1.8" fill="#2D1B33" />
+      <Circle cx="10.5" cy="20.5" r="0.4" fill="#FFFFFF" />
 
-        <Circle cx="82" cy="76" r="3" fill="#FFB0B0" opacity={0.4} />
-        <Circle cx="58" cy="76" r="3" fill="#FFB0B0" opacity={0.4} />
+      <Path d="M7 24 Q8.5 26 10 24" stroke="#C8A090" strokeWidth="0.8" fill="none" strokeLinecap="round" />
 
-        <Path d="M170 100 Q180 96 190 100 Q195 98 200 100" stroke="#FFE0C8" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <Ellipse cx="8" cy="25.5" rx="1.5" ry="1" fill="#E8C0B0" />
 
-        <Rect x="8" y="140" width="8" height="14" rx="2" fill="url(#bedFrame)" />
-        <Rect x="244" y="140" width="8" height="14" rx="2" fill="url(#bedFrame)" />
-      </Svg>
-    </View>
+      <Path d="M5 26 Q4 28 5 30 Q5.5 31 6 30.5" stroke="#D8CFC0" strokeWidth="1" fill="none" strokeLinecap="round" />
+
+      <Circle cx="4" cy="24" r="1.5" fill="#FFD0D0" opacity={0.35} />
+      <Circle cx="13" cy="24" r="1.5" fill="#FFD0D0" opacity={0.35} />
+
+      <Path d="M20 36 Q19 42 18 46" stroke="#7A6555" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      <Path d="M26 37 Q25 43 24 46" stroke="#7A6555" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      <Path d="M34 37 Q35 43 36 46" stroke="#7A6555" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      <Path d="M40 36 Q41 42 42 46" stroke="#7A6555" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+
+      <Ellipse cx="18" cy="46" rx="2" ry="1" fill="#5A4A3A" />
+      <Ellipse cx="24" cy="46" rx="2" ry="1" fill="#5A4A3A" />
+      <Ellipse cx="36" cy="46" rx="2" ry="1" fill="#5A4A3A" />
+      <Ellipse cx="42" cy="46" rx="2" ry="1" fill="#5A4A3A" />
+
+      <Path d="M44 24 Q48 22 50 24 Q52 26 50 28 Q48 30 46 28" stroke="#D0C5B5" strokeWidth="0.6" fill="#F0E8DC" />
+    </Svg>
   );
 }
 
-function SheepJumping() {
-  const jumpAnim = useSharedValue(0);
-  const jumpX = useSharedValue(0);
+function FenceSvg() {
+  return (
+    <Svg width={70} height={50} viewBox="0 0 70 50">
+      <Defs>
+        <SvgGrad id="fenceWood" x1="0" y1="0" x2="1" y2="0">
+          <Stop offset="0" stopColor="#D4B896" />
+          <Stop offset="0.5" stopColor="#C8A880" />
+          <Stop offset="1" stopColor="#B89870" />
+        </SvgGrad>
+      </Defs>
+      <Rect x="8" y="0" width="6" height="50" rx="2" fill="url(#fenceWood)" stroke="#A08060" strokeWidth="0.5" />
+      <Path d="M8 4 L11 0 L14 4" fill="#C8A880" stroke="#A08060" strokeWidth="0.5" />
+      <Rect x="56" y="0" width="6" height="50" rx="2" fill="url(#fenceWood)" stroke="#A08060" strokeWidth="0.5" />
+      <Path d="M56 4 L59 0 L62 4" fill="#C8A880" stroke="#A08060" strokeWidth="0.5" />
+      <Rect x="32" y="5" width="5" height="45" rx="1.5" fill="url(#fenceWood)" stroke="#A08060" strokeWidth="0.4" />
+      <Path d="M32 9 L34.5 5 L37 9" fill="#C8A880" stroke="#A08060" strokeWidth="0.4" />
+      <Rect x="4" y="14" width="62" height="5" rx="2" fill="url(#fenceWood)" stroke="#A08060" strokeWidth="0.5" />
+      <Rect x="4" y="30" width="62" height="5" rx="2" fill="url(#fenceWood)" stroke="#A08060" strokeWidth="0.5" />
+      <Path d="M10 15 L10 18" stroke="#B89060" strokeWidth="0.3" />
+      <Path d="M20 15 L20 18" stroke="#B89060" strokeWidth="0.3" />
+      <Path d="M40 15 L40 18" stroke="#B89060" strokeWidth="0.3" />
+      <Path d="M50 15 L50 18" stroke="#B89060" strokeWidth="0.3" />
+    </Svg>
+  );
+}
+
+function GoatJumpingAnimation() {
+  const jumpY = useSharedValue(0);
+  const jumpX = useSharedValue(-30);
+  const rotation = useSharedValue(0);
 
   useEffect(() => {
-    jumpAnim.value = withRepeat(
+    jumpY.value = withRepeat(
       withSequence(
-        withTiming(-28, { duration: 500, easing: Easing.out(Easing.cubic) }),
-        withTiming(0, { duration: 500, easing: Easing.in(Easing.cubic) })
+        withTiming(0, { duration: 400, easing: Easing.linear }),
+        withTiming(-32, { duration: 350, easing: Easing.out(Easing.cubic) }),
+        withTiming(-36, { duration: 100, easing: Easing.linear }),
+        withTiming(-32, { duration: 100, easing: Easing.linear }),
+        withTiming(0, { duration: 350, easing: Easing.in(Easing.cubic) }),
+        withTiming(0, { duration: 500, easing: Easing.linear })
       ),
       -1,
       false
     );
     jumpX.value = withRepeat(
       withSequence(
-        withTiming(20, { duration: 500, easing: Easing.inOut(Easing.quad) }),
-        withTiming(-20, { duration: 500, easing: Easing.inOut(Easing.quad) })
+        withTiming(-30, { duration: 0 }),
+        withTiming(-10, { duration: 400, easing: Easing.linear }),
+        withTiming(10, { duration: 450, easing: Easing.inOut(Easing.quad) }),
+        withTiming(30, { duration: 450, easing: Easing.linear }),
+        withTiming(30, { duration: 200 }),
+        withTiming(-30, { duration: 300, easing: Easing.linear })
       ),
       -1,
-      true
+      false
+    );
+    rotation.value = withRepeat(
+      withSequence(
+        withTiming(0, { duration: 400 }),
+        withTiming(-5, { duration: 350 }),
+        withTiming(0, { duration: 200 }),
+        withTiming(5, { duration: 350 }),
+        withTiming(0, { duration: 200 }),
+        withTiming(0, { duration: 300 })
+      ),
+      -1,
+      false
     );
   }, []);
 
-  const sheepStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: jumpAnim.value }, { translateX: jumpX.value }],
+  const goatStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: jumpX.value },
+      { translateY: jumpY.value },
+      { rotate: `${rotation.value}deg` },
+    ],
   }));
 
   return (
-    <View style={sleepSceneStyles.sheepArea}>
-      <Svg width={50} height={40} viewBox="0 0 50 40" style={sleepSceneStyles.fence}>
-        <Line x1="8" y1="2" x2="8" y2="38" stroke="#C4A882" strokeWidth="2.5" />
-        <Line x1="42" y1="2" x2="42" y2="38" stroke="#C4A882" strokeWidth="2.5" />
-        <Line x1="4" y1="10" x2="46" y2="10" stroke="#C4A882" strokeWidth="2" />
-        <Line x1="4" y1="24" x2="46" y2="24" stroke="#C4A882" strokeWidth="2" />
-      </Svg>
-      <Animated.View style={[sleepSceneStyles.sheepSvg, sheepStyle]}>
-        <Svg width={44} height={36} viewBox="0 0 44 36">
-          <Ellipse cx="22" cy="18" rx="16" ry="12" fill="#F8F8F8" />
-          <Circle cx="22" cy="10" r="4" fill="#F8F8F8" />
-          <Circle cx="20" cy="14" r="3.5" fill="#FAFAFA" />
-          <Circle cx="24" cy="14" r="3.5" fill="#FAFAFA" />
-          <Circle cx="18" cy="17" r="3" fill="#F5F5F5" />
-          <Circle cx="26" cy="17" r="3" fill="#F5F5F5" />
-          <Circle cx="35" cy="14" r="6" fill="#F5F5F5" />
-          <Circle cx="36" cy="12" r="1.5" fill="#2D1B33" />
-          <Path d="M37 16 Q38 17 39 16" stroke="#2D1B33" strokeWidth="0.6" fill="none" />
-          <Ellipse cx="35" cy="16" r="2" ry="1.5" fill="#FFCCCC" opacity={0.4} />
-          <Line x1="14" y1="28" x2="14" y2="35" stroke="#2D1B33" strokeWidth="1.8" strokeLinecap="round" />
-          <Line x1="20" y1="29" x2="20" y2="35" stroke="#2D1B33" strokeWidth="1.8" strokeLinecap="round" />
-          <Line x1="26" y1="29" x2="26" y2="35" stroke="#2D1B33" strokeWidth="1.8" strokeLinecap="round" />
-          <Line x1="30" y1="28" x2="30" y2="35" stroke="#2D1B33" strokeWidth="1.8" strokeLinecap="round" />
-        </Svg>
+    <View style={goatAnimStyles.wrapper}>
+      <View style={goatAnimStyles.fenceWrap}>
+        <FenceSvg />
+      </View>
+      <Animated.View style={[goatAnimStyles.goat, goatStyle]}>
+        <GoatSvg />
       </Animated.View>
+    </View>
+  );
+}
+
+const goatAnimStyles = StyleSheet.create({
+  wrapper: {
+    height: 75,
+    width: 160,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    overflow: "hidden",
+  },
+  fenceWrap: {
+    position: "absolute",
+    bottom: 0,
+  },
+  goat: {
+    position: "absolute",
+    bottom: 18,
+  },
+});
+
+function SleepSceneIllustration() {
+  return (
+    <Svg width={280} height={180} viewBox="0 0 280 180">
+      <Defs>
+        <SvgGrad id="bedFrameGrad" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#D4B896" />
+          <Stop offset="0.5" stopColor="#C0A07A" />
+          <Stop offset="1" stopColor="#A88A60" />
+        </SvgGrad>
+        <SvgGrad id="headboardGrad" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#C8A882" />
+          <Stop offset="0.3" stopColor="#B89870" />
+          <Stop offset="1" stopColor="#A08058" />
+        </SvgGrad>
+        <SvgGrad id="blanketGrad" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor="#FFB6D9" />
+          <Stop offset="0.3" stopColor="#FFA8CF" />
+          <Stop offset="0.7" stopColor="#F898C0" />
+          <Stop offset="1" stopColor="#E888B5" />
+        </SvgGrad>
+        <SvgGrad id="pillowGrad" x1="0" y1="0" x2="0.5" y2="1">
+          <Stop offset="0" stopColor="#FFFFFF" />
+          <Stop offset="0.5" stopColor="#FFF5F8" />
+          <Stop offset="1" stopColor="#F5E8F0" />
+        </SvgGrad>
+        <SvgGrad id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#FFE5D0" />
+          <Stop offset="1" stopColor="#FFDAB8" />
+        </SvgGrad>
+        <SvgGrad id="hairGrad" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor="#6B3A20" />
+          <Stop offset="0.4" stopColor="#5C3018" />
+          <Stop offset="1" stopColor="#4A2512" />
+        </SvgGrad>
+        <SvgGrad id="sheetGrad" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#FFFBFE" />
+          <Stop offset="1" stopColor="#FFF0F5" />
+        </SvgGrad>
+        <ClipPath id="bedClip">
+          <Rect x="18" y="78" width="244" height="82" rx="5" />
+        </ClipPath>
+      </Defs>
+
+      <Path d="M22 60 Q22 50 32 48 L248 48 Q258 50 258 60 L258 68 L22 68 Z" fill="url(#headboardGrad)" stroke="#9A7850" strokeWidth="0.8" />
+      <Path d="M36 52 Q36 56 40 56 L60 56 Q64 56 64 52" stroke="#B89870" strokeWidth="0.6" fill="none" />
+      <Path d="M80 52 Q80 56 84 56 L104 56 Q108 56 108 52" stroke="#B89870" strokeWidth="0.6" fill="none" />
+      <Path d="M172 52 Q172 56 176 56 L196 56 Q200 56 200 52" stroke="#B89870" strokeWidth="0.6" fill="none" />
+      <Path d="M216 52 Q216 56 220 56 L240 56 Q244 56 244 52" stroke="#B89870" strokeWidth="0.6" fill="none" />
+
+      <Rect x="14" y="68" width="252" height="88" rx="6" fill="url(#bedFrameGrad)" stroke="#9A7850" strokeWidth="0.8" />
+      <Path d="M20 72 L260 72" stroke="#C8A878" strokeWidth="0.4" />
+
+      <Rect x="20" y="74" width="240" height="78" rx="4" fill="url(#sheetGrad)" />
+
+      <Path d="M42 86 Q80 72 118 86" fill="url(#pillowGrad)" stroke="#E8D5E0" strokeWidth="0.6" />
+      <Ellipse cx="80" cy="86" rx="42" ry="16" fill="url(#pillowGrad)" stroke="#E8D5E0" strokeWidth="0.6" />
+      <Path d="M44 84 Q60 78 80 76 Q100 78 116 84" stroke="#F0E0E8" strokeWidth="0.4" fill="none" />
+      <Path d="M50 88 Q80 83 110 88" stroke="#F0E0E8" strokeWidth="0.3" fill="none" />
+
+      <G clipPath="url(#bedClip)">
+        <Path d="M20 92 Q60 86 140 92 Q200 96 260 90 L260 156 L20 156 Z" fill="url(#blanketGrad)" opacity={0.92} />
+        <Path d="M20 104 Q80 96 140 104 Q200 110 260 102" stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" fill="none" />
+        <Path d="M20 118 Q90 112 160 118 Q220 124 260 116" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" fill="none" />
+        <Path d="M20 132 Q100 126 180 132 Q230 136 260 130" stroke="rgba(255,255,255,0.18)" strokeWidth="0.6" fill="none" />
+        <Path d="M170 94 Q175 90 182 92 Q186 90 192 94" stroke="rgba(255,220,200,0.6)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      </G>
+
+      <Circle cx="82" cy="76" r="17" fill="url(#skinGrad)" />
+      <Ellipse cx="82" cy="79" rx="16" ry="15" fill="url(#skinGrad)" />
+
+      <Path d="M62 68 Q64 55 72 52 Q78 48 82 50 Q86 48 92 52 Q100 55 102 68 Q100 64 96 62 Q92 60 86 62 Q82 64 78 62 Q74 60 70 62 Q66 64 62 68 Z" fill="url(#hairGrad)" />
+      <Path d="M62 68 Q60 74 62 80 Q62 76 64 72 Q66 68 62 68 Z" fill="url(#hairGrad)" />
+      <Path d="M102 68 Q104 74 102 80 Q102 76 100 72 Q98 68 102 68 Z" fill="url(#hairGrad)" />
+
+      <Path d="M64 70 Q62 75 60 82 Q58 88 62 90" stroke="#5C3018" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      <Path d="M66 72 Q64 76 63 84" stroke="#4A2512" strokeWidth="0.8" fill="none" />
+
+      <Path d="M100 70 Q102 75 104 82 Q106 88 102 90" stroke="#5C3018" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      <Path d="M98 72 Q100 76 101 84" stroke="#4A2512" strokeWidth="0.8" fill="none" />
+
+      <Rect x="70" y="74" width="11" height="7" rx="3.5" fill="rgba(30,30,40,0.08)" stroke="#2A2A3A" strokeWidth="1" />
+      <Rect x="83" y="74" width="11" height="7" rx="3.5" fill="rgba(30,30,40,0.08)" stroke="#2A2A3A" strokeWidth="1" />
+      <Line x1="81" y1="77.5" x2="83" y2="77.5" stroke="#2A2A3A" strokeWidth="0.8" />
+      <Line x1="67" y1="77" x2="70" y2="77" stroke="#2A2A3A" strokeWidth="0.7" />
+      <Line x1="94" y1="77" x2="97" y2="77" stroke="#2A2A3A" strokeWidth="0.7" />
+
+      <Path d="M74 76 Q75 75.5 76 76" stroke="#2D1B33" strokeWidth="0.8" fill="none" />
+      <Path d="M87 76 Q88 75.5 89 76" stroke="#2D1B33" strokeWidth="0.8" fill="none" />
+
+      <Path d="M78 84 Q82 87 86 84" stroke="#E07090" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+
+      <Ellipse cx="70" cy="82" rx="4" ry="3" fill="#FFB0B0" opacity={0.3} />
+      <Ellipse cx="94" cy="82" rx="4" ry="3" fill="#FFB0B0" opacity={0.3} />
+
+      <G opacity={0.5}>
+        <Text x="130" y="70" fontSize="10" fill="#C9A0DC" fontFamily="serif">z</Text>
+        <Text x="140" y="60" fontSize="13" fill="#C9A0DC" fontFamily="serif">z</Text>
+        <Text x="152" y="48" fontSize="16" fill="#C9A0DC" fontFamily="serif">Z</Text>
+      </G>
+
+      <Rect x="12" y="152" width="10" height="18" rx="3" fill="url(#bedFrameGrad)" stroke="#9A7850" strokeWidth="0.5" />
+      <Rect x="258" y="152" width="10" height="18" rx="3" fill="url(#bedFrameGrad)" stroke="#9A7850" strokeWidth="0.5" />
+
+      <Ellipse cx="140" cy="168" rx="120" ry="4" fill="rgba(160,140,170,0.08)" />
+    </Svg>
+  );
+}
+
+function SleepScene() {
+  return (
+    <View style={sleepSceneStyles.container}>
+      <View style={sleepSceneStyles.dreamBubble}>
+        <View style={sleepSceneStyles.bubbleShape}>
+          <GoatJumpingAnimation />
+        </View>
+        <View style={sleepSceneStyles.bubbleDot1} />
+        <View style={sleepSceneStyles.bubbleDot2} />
+        <View style={sleepSceneStyles.bubbleDot3} />
+      </View>
+      <SleepSceneIllustration />
     </View>
   );
 }
@@ -161,22 +330,49 @@ function SheepJumping() {
 const sleepSceneStyles = StyleSheet.create({
   container: {
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  sheepArea: {
-    height: 60,
-    width: 120,
+  dreamBubble: {
     alignItems: "center",
-    justifyContent: "flex-end",
-    marginBottom: 4,
+    marginBottom: 8,
+    paddingLeft: 60,
   },
-  fence: {
-    position: "absolute",
-    bottom: 0,
+  bubbleShape: {
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderRadius: 40,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderWidth: 1.5,
+    borderColor: "rgba(200,180,220,0.3)",
+    ...SHADOWS.small,
   },
-  sheepSvg: {
-    position: "absolute",
-    bottom: 12,
+  bubbleDot1: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    marginTop: 2,
+    marginRight: 40,
+    borderWidth: 1,
+    borderColor: "rgba(200,180,220,0.25)",
+  },
+  bubbleDot2: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(255,255,255,0.7)",
+    marginTop: 1,
+    marginRight: 60,
+    borderWidth: 1,
+    borderColor: "rgba(200,180,220,0.2)",
+  },
+  bubbleDot3: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "rgba(255,255,255,0.6)",
+    marginTop: 0,
+    marginRight: 70,
   },
 });
 
@@ -274,114 +470,6 @@ function buildSmoothGradient(moods: MoodSelection[]): string[] {
 
   return stops;
 }
-
-function DraggableSlider({ value, onValueChange }: { value: number; onValueChange: (v: number) => void }) {
-  const trackWidth = useRef(SCREEN_W - 80);
-  const currentValue = useRef(value);
-  currentValue.current = value;
-
-  const panResponder = useMemo(() =>
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt) => {
-        const x = evt.nativeEvent.locationX;
-        const newVal = Math.round(Math.max(0, Math.min(20, (x / trackWidth.current) * 20)));
-        onValueChange(newVal);
-      },
-      onPanResponderMove: (evt) => {
-        const x = evt.nativeEvent.locationX;
-        const newVal = Math.round(Math.max(0, Math.min(20, (x / trackWidth.current) * 20)));
-        if (newVal !== currentValue.current) {
-          onValueChange(newVal);
-        }
-      },
-    }),
-    [onValueChange]
-  );
-
-  const handleLayout = (e: LayoutChangeEvent) => {
-    trackWidth.current = e.nativeEvent.layout.width;
-  };
-
-  const pct = (value / 20) * 100;
-
-  return (
-    <View style={sliderStyles.container}>
-      <Text style={sliderStyles.label}>{value}h</Text>
-      <View
-        style={sliderStyles.track}
-        onLayout={handleLayout}
-        {...panResponder.panHandlers}
-      >
-        <View style={sliderStyles.bg}>
-          <LinearGradient
-            colors={GRADIENTS.romantic as any}
-            style={[sliderStyles.fill, { width: `${pct}%` }]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          />
-        </View>
-        <View style={[sliderStyles.thumb, { left: `${pct}%` }]} />
-      </View>
-      <View style={sliderStyles.labels}>
-        <Text style={sliderStyles.endLabel}>0h</Text>
-        <Text style={sliderStyles.endLabel}>20h</Text>
-      </View>
-    </View>
-  );
-}
-
-const sliderStyles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-    paddingHorizontal: 10,
-  },
-  label: {
-    fontFamily: "Quicksand_700Bold",
-    fontSize: 28,
-    color: COLORS.pink,
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  track: {
-    height: 44,
-    justifyContent: "center",
-    position: "relative",
-  },
-  bg: {
-    height: 8,
-    backgroundColor: COLORS.pinkPale,
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  fill: {
-    height: 8,
-    borderRadius: 4,
-  },
-  thumb: {
-    position: "absolute",
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.pink,
-    marginLeft: -14,
-    top: 8,
-    borderWidth: 3,
-    borderColor: COLORS.white,
-    ...SHADOWS.medium,
-  },
-  labels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 2,
-  },
-  endLabel: {
-    fontFamily: "Quicksand_400Regular",
-    fontSize: 12,
-    color: COLORS.textLight,
-  },
-});
 
 export default function MoodSleepScreen() {
   const insets = useSafeAreaInsets();
@@ -499,7 +587,24 @@ export default function MoodSleepScreen() {
 
         <SleepScene />
 
-        <DraggableSlider value={sleepHours} onValueChange={setSleepHours} />
+        <View style={styles.sliderSection}>
+          <Text style={styles.sliderLabel}>{sleepHours} sati</Text>
+          <Slider
+            style={styles.slider}
+            minimumValue={0}
+            maximumValue={20}
+            step={1}
+            value={sleepHours}
+            onValueChange={(v: number) => setSleepHours(v)}
+            minimumTrackTintColor={COLORS.pink}
+            maximumTrackTintColor={COLORS.pinkPale}
+            thumbTintColor={COLORS.pink}
+          />
+          <View style={styles.sliderEndLabels}>
+            <Text style={styles.sliderEndLabel}>0 sati</Text>
+            <Text style={styles.sliderEndLabel}>20 sati</Text>
+          </View>
+        </View>
 
         <Pressable
           onPress={handleSleepConfirm}
@@ -700,6 +805,31 @@ const styles = StyleSheet.create({
     color: COLORS.lavender,
     textAlign: "center",
     marginBottom: 16,
+  },
+  sliderSection: {
+    marginBottom: 20,
+    paddingHorizontal: 6,
+  },
+  sliderLabel: {
+    fontFamily: "Quicksand_700Bold",
+    fontSize: 28,
+    color: COLORS.pink,
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  slider: {
+    width: "100%",
+    height: 44,
+  },
+  sliderEndLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 4,
+  },
+  sliderEndLabel: {
+    fontFamily: "Quicksand_400Regular",
+    fontSize: 12,
+    color: COLORS.textLight,
   },
   sleepBtn: {
     flexDirection: "row",
