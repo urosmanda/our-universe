@@ -26,71 +26,129 @@ import { LOVE_JAR_MESSAGES } from "@/constants/messages";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
-const NOTE_POSITIONS = [
-  { x: 58, y: 68, r: -18 }, { x: 90, y: 62, r: 12 }, { x: 122, y: 70, r: -8 }, { x: 154, y: 64, r: 22 },
-  { x: 52, y: 92, r: 25 }, { x: 82, y: 88, r: -15 }, { x: 114, y: 84, r: 8 }, { x: 146, y: 90, r: -22 }, { x: 168, y: 86, r: 14 },
-  { x: 56, y: 114, r: -10 }, { x: 86, y: 110, r: 20 }, { x: 118, y: 106, r: -5 }, { x: 150, y: 112, r: 15 }, { x: 170, y: 108, r: -18 },
-  { x: 50, y: 138, r: 12 }, { x: 80, y: 134, r: -20 }, { x: 112, y: 130, r: 6 }, { x: 144, y: 136, r: -12 }, { x: 166, y: 132, r: 22 },
-  { x: 54, y: 162, r: -8 }, { x: 84, y: 158, r: 18 }, { x: 116, y: 154, r: -14 }, { x: 148, y: 160, r: 10 }, { x: 168, y: 156, r: -25 },
-  { x: 58, y: 186, r: 15 }, { x: 88, y: 182, r: -10 }, { x: 120, y: 178, r: 20 }, { x: 152, y: 184, r: -6 },
-  { x: 62, y: 206, r: -22 }, { x: 94, y: 202, r: 8 }, { x: 126, y: 198, r: -16 }, { x: 158, y: 204, r: 12 },
-  { x: 68, y: 224, r: 10 }, { x: 100, y: 220, r: -12 }, { x: 132, y: 218, r: 18 }, { x: 156, y: 222, r: -8 },
+const SCROLL_NOTES = [
+  { x: 60, y: 72, r: -20 }, { x: 88, y: 66, r: 14 }, { x: 118, y: 70, r: -6 }, { x: 148, y: 64, r: 24 }, { x: 168, y: 72, r: -16 },
+  { x: 50, y: 94, r: 28 }, { x: 78, y: 90, r: -12 }, { x: 106, y: 86, r: 10 }, { x: 136, y: 92, r: -24 }, { x: 164, y: 88, r: 18 },
+  { x: 54, y: 116, r: -8 }, { x: 82, y: 112, r: 22 }, { x: 112, y: 108, r: -4 }, { x: 142, y: 114, r: 16 }, { x: 166, y: 110, r: -20 },
+  { x: 48, y: 138, r: 14 }, { x: 76, y: 134, r: -18 }, { x: 106, y: 130, r: 8 }, { x: 136, y: 136, r: -10 }, { x: 162, y: 132, r: 26 },
+  { x: 52, y: 160, r: -6 }, { x: 80, y: 156, r: 20 }, { x: 110, y: 152, r: -14 }, { x: 140, y: 158, r: 12 }, { x: 164, y: 154, r: -22 },
+  { x: 56, y: 182, r: 16 }, { x: 84, y: 178, r: -8 }, { x: 114, y: 174, r: 22 }, { x: 144, y: 180, r: -4 }, { x: 160, y: 176, r: 10 },
+  { x: 60, y: 202, r: -24 }, { x: 90, y: 198, r: 10 }, { x: 120, y: 194, r: -16 }, { x: 150, y: 200, r: 14 },
+  { x: 66, y: 220, r: 8 }, { x: 96, y: 216, r: -10 }, { x: 126, y: 214, r: 20 }, { x: 152, y: 218, r: -6 },
+  { x: 72, y: 236, r: -14 }, { x: 102, y: 232, r: 12 }, { x: 134, y: 230, r: -8 }, { x: 156, y: 234, r: 16 },
 ];
+
+function ScrollNote({ x, y, r }: { x: number; y: number; r: number }) {
+  return (
+    <G transform={`translate(${x}, ${y}) rotate(${r})`}>
+      <Path d="M-13 -5 Q-14 -7 -12 -8 L12 -8 Q14 -7 13 -5 L13 5 Q14 7 12 8 L-12 8 Q-14 7 -13 5 Z" fill="#FFFDF8" stroke="#E8DDD0" strokeWidth="0.5" />
+      <Path d="M-13 -5 Q-11 -3 -13 -1 Q-11 1 -13 3 Q-11 5 -13 5" stroke="#E8DDD0" strokeWidth="0.4" fill="none" />
+      <Path d="M13 -5 Q11 -3 13 -1 Q11 1 13 3 Q11 5 13 5" stroke="#E8DDD0" strokeWidth="0.4" fill="none" />
+      <Path d="M-8 -2 L8 -2" stroke="#F0E8E0" strokeWidth="0.3" />
+      <Path d="M-6 0 L6 0" stroke="#F0E8E0" strokeWidth="0.3" />
+      <Path d="M-7 2 L7 2" stroke="#F0E8E0" strokeWidth="0.3" />
+      <Path d="M-2 -11 Q-1 -14 1 -11" stroke="#CC2244" strokeWidth="1.2" fill="none" />
+      <Path d="M1 -11 Q3 -14 4 -11" stroke="#CC2244" strokeWidth="1.2" fill="none" />
+      <Path d="M-2 -11 L0.5 -8" stroke="#CC2244" strokeWidth="0.7" />
+      <Path d="M4 -11 L1.5 -8" stroke="#CC2244" strokeWidth="0.7" />
+      <Circle cx="-0.5" cy="-12" r="1" fill="#CC2244" />
+      <Circle cx="2.5" cy="-12" r="1" fill="#CC2244" />
+      <Path d="M-3 -11 Q-4 -13 -5 -12" stroke="#CC2244" strokeWidth="0.6" fill="none" />
+      <Path d="M5 -11 Q6 -13 7 -12" stroke="#CC2244" strokeWidth="0.6" fill="none" />
+    </G>
+  );
+}
 
 function JarIllustration() {
   return (
-    <Svg width={220} height={290} viewBox="0 0 220 290">
+    <Svg width={220} height={300} viewBox="0 0 220 300">
       <Defs>
-        <SvgGrad id="jarGlass" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#E8F4FD" stopOpacity="0.4" />
-          <Stop offset="0.5" stopColor="#D4ECF9" stopOpacity="0.2" />
-          <Stop offset="1" stopColor="#C8E6F5" stopOpacity="0.35" />
+        <SvgGrad id="jarGlassL" x1="0" y1="0" x2="1" y2="0">
+          <Stop offset="0" stopColor="#D8ECF8" stopOpacity="0.45" />
+          <Stop offset="0.3" stopColor="#E4F2FC" stopOpacity="0.2" />
+          <Stop offset="0.7" stopColor="#DFF0FB" stopOpacity="0.15" />
+          <Stop offset="1" stopColor="#CCE4F4" stopOpacity="0.4" />
         </SvgGrad>
-        <SvgGrad id="lidMetal" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#F5F0E8" />
-          <Stop offset="0.3" stopColor="#E8E0D0" />
-          <Stop offset="0.7" stopColor="#D8CFC0" />
-          <Stop offset="1" stopColor="#C8BFB0" />
+        <SvgGrad id="jarGlassV" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#E8F4FD" stopOpacity="0.35" />
+          <Stop offset="0.5" stopColor="#D4ECF9" stopOpacity="0.12" />
+          <Stop offset="1" stopColor="#C0DCF0" stopOpacity="0.3" />
         </SvgGrad>
-        <SvgGrad id="lidTop" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#F0E8D8" />
-          <Stop offset="1" stopColor="#E0D8C8" />
+        <SvgGrad id="lidChromeTop" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#F8F2E8" />
+          <Stop offset="0.15" stopColor="#EDE5D5" />
+          <Stop offset="0.5" stopColor="#E0D6C4" />
+          <Stop offset="0.85" stopColor="#D4CAB8" />
+          <Stop offset="1" stopColor="#C8BEA8" />
         </SvgGrad>
-        <ClipPath id="jarClip">
-          <Path d="M42 45 L38 75 Q28 145 32 210 Q34 248 58 268 Q74 280 110 280 Q146 280 162 268 Q186 248 188 210 Q192 145 182 75 L178 45 Z" />
+        <SvgGrad id="lidChromeSide" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#E8E0D0" />
+          <Stop offset="0.3" stopColor="#DCD4C0" />
+          <Stop offset="0.6" stopColor="#D0C8B4" />
+          <Stop offset="1" stopColor="#C0B8A4" />
+        </SvgGrad>
+        <SvgGrad id="lidKnob" x1="0.3" y1="0" x2="0.7" y2="1">
+          <Stop offset="0" stopColor="#E0D8C8" />
+          <Stop offset="0.5" stopColor="#D0C8B4" />
+          <Stop offset="1" stopColor="#B8AE9A" />
+        </SvgGrad>
+        <SvgGrad id="neckRim" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="rgba(200,220,240,0.35)" />
+          <Stop offset="1" stopColor="rgba(180,200,220,0.5)" />
+        </SvgGrad>
+        <SvgGrad id="sparkle" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.9" />
+          <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+        </SvgGrad>
+        <ClipPath id="jarInside">
+          <Path d="M46 50 Q42 55 40 70 L36 100 Q28 160 32 220 Q34 252 60 272 Q76 284 110 284 Q144 284 160 272 Q186 252 188 220 Q192 160 184 100 L180 70 Q178 55 174 50 Z" />
         </ClipPath>
       </Defs>
 
-      <Rect x="38" y="18" width="144" height="28" rx="5" fill="url(#lidMetal)" stroke="#C0B8A8" strokeWidth="1" />
-      <Rect x="48" y="8" width="124" height="14" rx="7" fill="url(#lidTop)" stroke="#D0C8B8" strokeWidth="0.8" />
-      <Path d="M50 18 L50 22" stroke="#D8D0C0" strokeWidth="0.5" />
-      <Path d="M70 18 L70 22" stroke="#D8D0C0" strokeWidth="0.5" />
-      <Path d="M90 18 L90 22" stroke="#D8D0C0" strokeWidth="0.5" />
-      <Path d="M110 18 L110 22" stroke="#D8D0C0" strokeWidth="0.5" />
-      <Path d="M130 18 L130 22" stroke="#D8D0C0" strokeWidth="0.5" />
-      <Path d="M150 18 L150 22" stroke="#D8D0C0" strokeWidth="0.5" />
-      <Path d="M170 18 L170 22" stroke="#D8D0C0" strokeWidth="0.5" />
+      <Ellipse cx="110" cy="290" rx="72" ry="6" fill="rgba(160,140,180,0.1)" />
+      <Ellipse cx="110" cy="290" rx="55" ry="4" fill="rgba(140,120,160,0.08)" />
 
-      <Path d="M42 45 L38 75 Q28 145 32 210 Q34 248 58 268 Q74 280 110 280 Q146 280 162 268 Q186 248 188 210 Q192 145 182 75 L178 45 Z" fill="url(#jarGlass)" stroke="rgba(170,200,230,0.6)" strokeWidth="1.5" />
+      <Path d="M46 50 Q42 55 40 70 L36 100 Q28 160 32 220 Q34 252 60 272 Q76 284 110 284 Q144 284 160 272 Q186 252 188 220 Q192 160 184 100 L180 70 Q178 55 174 50 Z" fill="url(#jarGlassV)" />
+      <Path d="M46 50 Q42 55 40 70 L36 100 Q28 160 32 220 Q34 252 60 272 Q76 284 110 284 Q144 284 160 272 Q186 252 188 220 Q192 160 184 100 L180 70 Q178 55 174 50 Z" fill="url(#jarGlassL)" />
+      <Path d="M46 50 Q42 55 40 70 L36 100 Q28 160 32 220 Q34 252 60 272 Q76 284 110 284 Q144 284 160 272 Q186 252 188 220 Q192 160 184 100 L180 70 Q178 55 174 50 Z" stroke="rgba(160,195,230,0.55)" strokeWidth="1.5" fill="none" />
 
-      <G clipPath="url(#jarClip)">
-        {NOTE_POSITIONS.map((pos, i) => (
-          <G key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.r})`}>
-            <Rect x="-14" y="-7" width="28" height="14" rx="4" fill="#FFFAF5" stroke="#E8DDD0" strokeWidth="0.6" />
-            <Path d="M-3 -9 Q-1 -14 1 -9" stroke="#D4364C" strokeWidth="1" fill="none" />
-            <Path d="M1 -9 Q3 -14 5 -9" stroke="#D4364C" strokeWidth="1" fill="none" />
-            <Circle cx="-1" cy="-10" r="1.2" fill="#D4364C" />
-            <Circle cx="3" cy="-10" r="1.2" fill="#D4364C" />
-            <Path d="M-1 -9 L1 -6" stroke="#D4364C" strokeWidth="0.6" />
-            <Path d="M3 -9 L1 -6" stroke="#D4364C" strokeWidth="0.6" />
-          </G>
+      <Path d="M46 48 Q58 44 110 44 Q162 44 174 48 L174 50 Q162 46 110 46 Q58 46 46 50 Z" fill="url(#neckRim)" stroke="rgba(170,200,230,0.4)" strokeWidth="0.5" />
+      <Path d="M48 44 Q58 40 110 40 Q162 40 172 44" stroke="rgba(180,210,235,0.5)" strokeWidth="1" fill="none" />
+
+      <G clipPath="url(#jarInside)">
+        {SCROLL_NOTES.map((pos, i) => (
+          <ScrollNote key={i} x={pos.x} y={pos.y} r={pos.r} />
         ))}
       </G>
 
-      <Path d="M52 50 Q48 55 46 70 L44 95" stroke="rgba(255,255,255,0.55)" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <Path d="M56 55 Q54 60 53 72 L52 85" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+      <Path d="M54 56 Q50 62 48 78 Q46 94 46 108" stroke="rgba(255,255,255,0.6)" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+      <Path d="M58 60 Q56 68 55 80 Q54 92 54 100" stroke="rgba(255,255,255,0.3)" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <Path d="M168 58 Q170 64 171 76" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" fill="none" strokeLinecap="round" />
 
-      <Ellipse cx="110" cy="282" rx="65" ry="5" fill="rgba(180,160,190,0.12)" />
+      <Path d="M50 240 Q60 250 80 256 Q110 264 140 256 Q160 250 170 240" stroke="rgba(180,210,235,0.2)" strokeWidth="0.6" fill="none" />
+
+      <Rect x="42" y="26" width="136" height="22" rx="4" fill="url(#lidChromeSide)" stroke="#B8AE9A" strokeWidth="0.8" />
+      <Path d="M44 28 L176 28" stroke="rgba(255,255,255,0.4)" strokeWidth="0.6" />
+      <Path d="M44 36 L176 36" stroke="rgba(200,190,175,0.3)" strokeWidth="0.4" />
+      <Path d="M44 42 L176 42" stroke="rgba(200,190,175,0.3)" strokeWidth="0.4" />
+
+      <Path d="M50 26 Q50 14 60 12 L160 12 Q170 14 170 26 Z" fill="url(#lidChromeTop)" stroke="#B8AE9A" strokeWidth="0.8" />
+      <Path d="M58 16 L162 16" stroke="rgba(255,255,255,0.35)" strokeWidth="0.5" />
+      <Path d="M55 20 L165 20" stroke="rgba(200,190,175,0.2)" strokeWidth="0.4" />
+
+      <Ellipse cx="110" cy="12" rx="14" ry="6" fill="url(#lidKnob)" stroke="#A89A86" strokeWidth="0.6" />
+      <Path d="M100 10 Q110 8 120 10" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" fill="none" />
+
+      <G opacity={0.7}>
+        <Path d="M42 58 L44 54 L46 58 M44 54 L44 50" stroke="#FFD700" strokeWidth="0.8" strokeLinecap="round" />
+        <Path d="M176 52 L178 48 L180 52 M178 48 L178 44" stroke="#FFD700" strokeWidth="0.8" strokeLinecap="round" />
+        <Path d="M36 100 L38 96 L40 100 M38 96 L38 92" stroke="#FFD700" strokeWidth="0.6" strokeLinecap="round" />
+        <Path d="M182 88 L184 84 L186 88 M184 84 L184 80" stroke="#FFD700" strokeWidth="0.6" strokeLinecap="round" />
+        <Circle cx="38" cy="140" r="1.2" fill="#FFD700" opacity={0.5} />
+        <Circle cx="184" cy="130" r="1" fill="#FFD700" opacity={0.4} />
+        <Circle cx="42" cy="200" r="0.8" fill="#FFD700" opacity={0.35} />
+        <Circle cx="178" cy="190" r="1" fill="#FFD700" opacity={0.4} />
+      </G>
     </Svg>
   );
 }
