@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -20,11 +20,22 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import Svg, { Path, Rect, Ellipse, Circle, G, Defs, LinearGradient as SvgGrad, Stop, ClipPath } from "react-native-svg";
-import { COLORS, FONTS, GRADIENTS } from "@/constants/theme";
+import Svg, {
+  Path,
+  Rect,
+  Ellipse,
+  Circle,
+  G,
+  Defs,
+  LinearGradient as SvgGrad,
+  Stop,
+  ClipPath,
+} from "react-native-svg";
+import { useNavigation } from "expo-router";
+import { COLORS, GRADIENTS } from "@/constants/theme";
 import { LOVE_JAR_MESSAGES } from "@/constants/messages";
 
-const { width: SCREEN_W } = Dimensions.get("window");
+const USED_INDEXES_KEY = "lovejar_used_indexes";
 
 const SCROLL_NOTES = [
   { x: 60, y: 72, r: -20 }, { x: 88, y: 66, r: 14 }, { x: 118, y: 70, r: -6 }, { x: 148, y: 64, r: 24 }, { x: 168, y: 72, r: -16 },
@@ -96,10 +107,6 @@ function JarIllustration() {
           <Stop offset="0" stopColor="rgba(200,220,240,0.35)" />
           <Stop offset="1" stopColor="rgba(180,200,220,0.5)" />
         </SvgGrad>
-        <SvgGrad id="sparkle" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.9" />
-          <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
-        </SvgGrad>
         <ClipPath id="jarInside">
           <Path d="M46 50 Q42 55 40 70 L36 100 Q28 160 32 220 Q34 252 60 272 Q76 284 110 284 Q144 284 160 272 Q186 252 188 220 Q192 160 184 100 L180 70 Q178 55 174 50 Z" />
         </ClipPath>
@@ -138,25 +145,17 @@ function JarIllustration() {
 
       <Ellipse cx="110" cy="12" rx="14" ry="6" fill="url(#lidKnob)" stroke="#A89A86" strokeWidth="0.6" />
       <Path d="M100 10 Q110 8 120 10" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" fill="none" />
-
-      <G opacity={0.7}>
-        <Path d="M42 58 L44 54 L46 58 M44 54 L44 50" stroke="#FFD700" strokeWidth="0.8" strokeLinecap="round" />
-        <Path d="M176 52 L178 48 L180 52 M178 48 L178 44" stroke="#FFD700" strokeWidth="0.8" strokeLinecap="round" />
-        <Path d="M36 100 L38 96 L40 100 M38 96 L38 92" stroke="#FFD700" strokeWidth="0.6" strokeLinecap="round" />
-        <Path d="M182 88 L184 84 L186 88 M184 84 L184 80" stroke="#FFD700" strokeWidth="0.6" strokeLinecap="round" />
-        <Circle cx="38" cy="140" r="1.2" fill="#FFD700" opacity={0.5} />
-        <Circle cx="184" cy="130" r="1" fill="#FFD700" opacity={0.4} />
-        <Circle cx="42" cy="200" r="0.8" fill="#FFD700" opacity={0.35} />
-        <Circle cx="178" cy="190" r="1" fill="#FFD700" opacity={0.4} />
-      </G>
     </Svg>
   );
 }
 
 export default function LoveJarScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+
   const [todayMessage, setTodayMessage] = useState<string | null>(null);
   const [hasOpenedToday, setHasOpenedToday] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   const jarRotation = useSharedValue(0);
   const noteTranslateY = useSharedValue(60);
@@ -165,9 +164,51 @@ export default function LoveJarScreen() {
   const noteRotation = useSharedValue(0);
   const subtitleOpacity = useSharedValue(0);
 
+  const splashOpacity = useSharedValue(0);
+  const splashScale = useSharedValue(0.97);
+
+  useEffect(() => {
+    const parent = navigation.getParent?.();
+
+    if (showSplash) {
+      parent?.setOptions({
+        tabBarStyle: { display: "none" },
+      });
+
+      splashOpacity.value = withTiming(1, { duration: 500 });
+      splashScale.value = withTiming(1, { duration: 500 });
+
+      const timer = setTimeout(() => {
+        splashOpacity.value = withTiming(0, { duration: 450 }, (finished) => {
+          if (finished) {
+            runOnJS(setShowSplash)(false);
+          }
+        });
+      }, 1900);
+
+      return () => clearTimeout(timer);
+    }
+
+    parent?.setOptions({
+      tabBarStyle: {
+        backgroundColor: "rgba(255,255,255,0.92)",
+        borderTopColor: "rgba(216,140,163,0.16)",
+        height: Platform.OS === "ios" ? 88 : 64,
+        paddingBottom: Platform.OS === "ios" ? 26 : 10,
+        paddingTop: 8,
+      },
+    });
+  }, [showSplash, navigation, splashOpacity, splashScale]);
+
+  const splashAnimStyle = useAnimatedStyle(() => ({
+    opacity: splashOpacity.value,
+    transform: [{ scale: splashScale.value }],
+  }));
+
   const loadTodayState = useCallback(async () => {
     const today = new Date().toISOString().split("T")[0];
     const stored = await AsyncStorage.getItem("lovejar_last");
+
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.date === today) {
@@ -177,9 +218,17 @@ export default function LoveJarScreen() {
         noteOpacity.value = 1;
         noteTranslateY.value = 0;
         subtitleOpacity.value = 1;
+        return;
       }
     }
-  }, []);
+
+    setTodayMessage(null);
+    setHasOpenedToday(false);
+    noteScale.value = 0;
+    noteOpacity.value = 0;
+    noteTranslateY.value = 60;
+    subtitleOpacity.value = 0;
+  }, [noteScale, noteOpacity, noteTranslateY, subtitleOpacity]);
 
   useEffect(() => {
     loadTodayState();
@@ -189,6 +238,26 @@ export default function LoveJarScreen() {
     setTodayMessage(msg);
     setHasOpenedToday(true);
   }, []);
+
+  const getUniqueRandomMessage = async () => {
+    const usedRaw = await AsyncStorage.getItem(USED_INDEXES_KEY);
+    let usedIndexes: number[] = usedRaw ? JSON.parse(usedRaw) : [];
+
+    if (usedIndexes.length >= LOVE_JAR_MESSAGES.length) {
+      usedIndexes = [];
+    }
+
+    let randomIndex = Math.floor(Math.random() * LOVE_JAR_MESSAGES.length);
+
+    while (usedIndexes.includes(randomIndex)) {
+      randomIndex = Math.floor(Math.random() * LOVE_JAR_MESSAGES.length);
+    }
+
+    usedIndexes.push(randomIndex);
+    await AsyncStorage.setItem(USED_INDEXES_KEY, JSON.stringify(usedIndexes));
+
+    return LOVE_JAR_MESSAGES[randomIndex];
+  };
 
   const handleJarTap = async () => {
     if (Platform.OS !== "web") {
@@ -215,8 +284,7 @@ export default function LoveJarScreen() {
       withTiming(0, { duration: 60 })
     );
 
-    const randomIndex = Math.floor(Math.random() * LOVE_JAR_MESSAGES.length);
-    const message = LOVE_JAR_MESSAGES[randomIndex];
+    const message = await getUniqueRandomMessage();
     const today = new Date().toISOString().split("T")[0];
     await AsyncStorage.setItem("lovejar_last", JSON.stringify({ date: today, message }));
 
@@ -256,12 +324,32 @@ export default function LoveJarScreen() {
   const webTopInset = Platform.OS === "web" ? 67 : 0;
   const webBottomInset = Platform.OS === "web" ? 34 : 0;
 
+  if (showSplash) {
+    return (
+      <Animated.View style={[styles.splashOnlyScreen, splashAnimStyle]}>
+        <LinearGradient
+          colors={["#FFF7FA", "#FFE7F1", "#FCEBFF"]}
+          style={styles.splashGradient}
+        >
+          <Text style={styles.splashTitle}>Our UNiverse</Text>
+          <Text style={styles.splashSubtitle}>for Nadja, with love</Text>
+          <Text style={styles.splashSparkle}>✦</Text>
+        </LinearGradient>
+      </Animated.View>
+    );
+  }
+
   return (
-    <LinearGradient
-      colors={GRADIENTS.background}
-      style={styles.container}
-    >
-      <View style={[styles.content, { paddingTop: insets.top + 16 + webTopInset, paddingBottom: insets.bottom + 90 + webBottomInset }]}>
+    <LinearGradient colors={GRADIENTS.background} style={styles.container}>
+      <View
+        style={[
+          styles.content,
+          {
+            paddingTop: insets.top + 16 + webTopInset,
+            paddingBottom: insets.bottom + 90 + webBottomInset,
+          },
+        ]}
+      >
         <Text style={styles.title}>Love Jar</Text>
 
         <View style={styles.messageArea}>
@@ -269,7 +357,7 @@ export default function LoveJarScreen() {
             <>
               <Animated.View style={[styles.noteCard, noteAnimStyle]}>
                 <LinearGradient
-                  colors={['#FFFFFF', '#FFF7FA']}
+                  colors={["#FFFFFF", "#FFF7FA"]}
                   style={styles.noteGradient}
                 >
                   <Text style={styles.noteText}>{todayMessage}</Text>
@@ -290,9 +378,7 @@ export default function LoveJarScreen() {
           </Animated.View>
         </Pressable>
 
-        {!todayMessage && (
-          <Text style={styles.hint}>Dodirni teglu</Text>
-        )}
+        {!todayMessage && <Text style={styles.hint}>Dodirni teglu</Text>}
       </View>
     </LinearGradient>
   );
@@ -372,5 +458,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textLight,
     marginTop: 8,
+  },
+
+  splashOnlyScreen: {
+    flex: 1,
+  },
+  splashGradient: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  splashTitle: {
+    fontFamily: "DancingScript_700Bold",
+    fontSize: 48,
+    color: COLORS.pink,
+    textAlign: "center",
+  },
+  splashSubtitle: {
+    marginTop: 10,
+    fontFamily: "Quicksand_500Medium",
+    fontSize: 15,
+    color: "#7A6B75",
+    textAlign: "center",
+  },
+  splashSparkle: {
+    marginTop: 14,
+    fontSize: 18,
+    color: "#E78FB3",
+    textAlign: "center",
   },
 });
